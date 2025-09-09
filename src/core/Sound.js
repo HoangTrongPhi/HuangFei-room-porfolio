@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 let backgroundSound;
 
-export function loadBackgroundMusic(camera, path = 'public/audio/LittlerootTown_Pokemon.ogg') {
+export function loadBackgroundMusic(camera, path = 'public/music/LittlerootTown_Pokemon.ogg') {
     const listener = new THREE.AudioListener();
     camera.add(listener);
 
