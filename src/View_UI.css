@@ -1,0 +1,41 @@
+html, body, #app {
+    height: 100%;
+    margin: 0;
+}
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+/* ===== Overlay Menu ===== */
+#ui-overlay {
+    position: fixed;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 10; /* luôn nằm trên canvas */
+    font-family: "Arial", sans-serif;
+}
+
+#ui-overlay .menu-item {
+    color: #bce8ff;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s, border-color 0.2s, background-color 0.2s;
+
+    /* Khung bao */
+    border: 2px solid #4596ff;
+    padding: 6px 14px;
+    border-radius: 6px;
+}
+
+#ui-overlay .menu-item:hover {
+    transform: scale(1.1);
+    color: #6cf1ff;
+    background-color: #36b1cc;
+    border-color: #471a87;
+}

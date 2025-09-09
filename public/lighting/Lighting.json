@@ -1,0 +1,186 @@
+[
+  {
+    "name": "World_Ambient",
+    "type": "WORLD",
+    "color": [
+      0.050876,
+      0.050876,
+      0.050876
+    ],
+    "strength": 1.0
+  },
+  {
+    "name": "Point.001",
+    "type": "POINT",
+    "color": [
+      0.72387,
+      0.476781,
+      0.836061
+    ],
+    "energy": 10.0,
+    "position": [
+      0.396246,
+      0.070376,
+      0.28414
+    ],
+    "rotation": [
+      0.0,
+      -0.0,
+      0.0
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Point.002",
+    "type": "POINT",
+    "color": [
+      0.09725,
+      0.159425,
+      0.588962
+    ],
+    "energy": 10.0,
+    "position": [
+      0.028553,
+      -0.582022,
+      0.2987
+    ],
+    "rotation": [
+      0.0,
+      -0.0,
+      0.0
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Spot",
+    "type": "SPOT",
+    "color": [
+      1.0,
+      0.864433,
+      0.7
+    ],
+    "energy": 2.0,
+    "position": [
+      -0.088175,
+      -0.066051,
+      0.226979
+    ],
+    "rotation": [
+      0.082609,
+      -0.561998,
+      -0.03749
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "spotAngle": 1.22173,
+    "spotBlend": 0.5,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Point",
+    "type": "POINT",
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "energy": 2.0,
+    "position": [
+      -0.053322,
+      0.075789,
+      0.150111
+    ],
+    "rotation": [
+      0.0,
+      -0.0,
+      0.0
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Spot.001",
+    "type": "SPOT",
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "energy": 10.0,
+    "position": [
+      -0.036494,
+      0.082698,
+      0.401164
+    ],
+    "rotation": [
+      -0.060446,
+      0.001891,
+      -0.000114
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "spotAngle": 0.785398,
+    "spotBlend": 1.0,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Spot.002",
+    "type": "SPOT",
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "energy": 10.0,
+    "position": [
+      0.184967,
+      0.076847,
+      0.408003
+    ],
+    "rotation": [
+      0.0,
+      -0.008537,
+      0.0
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "spotAngle": 0.785398,
+    "spotBlend": 1.0,
+    "distance": 0.0,
+    "decay": 2.0
+  },
+  {
+    "name": "Point.003",
+    "type": "POINT",
+    "color": [
+      0.156738,
+      0.52854,
+      0.772457
+    ],
+    "energy": 1.0,
+    "position": [
+      0.178917,
+      -0.137904,
+      0.18901
+    ],
+    "rotation": [
+      0.039669,
+      -0.026293,
+      0.025645
+    ],
+    "castShadow": true,
+    "shadowMapSize": 1024,
+    "distance": 0.0,
+    "decay": 2.0
+  }
+]

@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HuangFei_Portfolio</title>
+  <link rel="stylesheet" href="/src/View_UI.css" />
+  <link rel="stylesheet" href="/src/Loading.css" />
+</head>
+<body>
+<!-- Canvas -->
+<canvas id="experience-canvas"></canvas>
+
+<!-- Loading Screen -->
+<div class="loading-screen">
+  <div class="loading-content">
+    <h1 class="loading-title">Loading...</h1>
+    <div class="loading-bar">
+      <div class="loading-progress"></div>
+    </div>
+    <button class="loading-screen-button">Loading...</button>
+    <p class="loading-hint">use left/right click and mouse wheel to navigate!</p>
+  </div>
+</div>
+
+<!-- Overlay UI -->
+<div id="ui-overlay">
+  <div class="menu-item" data-link="#mywork">MY WORK</div>
+  <div class="menu-item" data-link="#contact">CONTACT</div>
+  <div class="menu-item" data-link="#about">ABOUT</div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
