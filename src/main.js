@@ -12,15 +12,13 @@ import { loadRGBleds } from "./core/RGB_led.js";
 import { loadCasePC } from "./core/Case_PC.js";
 import { loadMonitorScreens } from "./core/screen_video.js";
 import { loadSocialLinks } from "./core/Social_Link.js";
-import { loadBackgroundMusic } from './core/Sound.js';
-
 
 // ================== CONFIG ==================
 const CONFIG = {
     renderer: {
         background: "#000000",
         toneMapping: THREE.LinearToneMapping,
-        toneMappingExposure: 0.0003, // tránh cháy sáng
+        toneMappingExposure: 0.0003,
         shadowType: THREE.PCFSoftShadowMap,
     },
     lights: {
@@ -85,7 +83,6 @@ const interval = setInterval(() => {
     if (progress >= 100) {
         clearInterval(interval);
 
-        // Khi đầy → hiển thị nút Enter + hint
         loadingButton.textContent = "Enter!";
         loadingButton.classList.add("active");
         loadingButton.style.cursor = "pointer";
@@ -109,10 +106,17 @@ const interval = setInterval(() => {
                 onComplete: () => {
                     loadingScreen.remove();
 
-                    //Phát nhạc nền ngay sau khi user click Enter
-                    loadBackgroundMusic(camera);
+                    // ===== Background Music =====
+                    const bgMusic = new Audio("/music/LittlerootTown_Pokemon.ogg");
+                    bgMusic.loop = true;
+                    bgMusic.volume = 0.6;
+                    bgMusic.muted = false;
+                    bgMusic.play().catch(err => {
+                        console.warn("Autoplay bị chặn:", err);
+                    });
+                    // ============================
 
-                    // Intro animation: object bay random rồi về vị trí gốc
+                    // Intro animation
                     scene.traverse(obj => {
                         if (obj.isMesh) {
                             if (obj.name.toLowerCase().includes("background")) return;
@@ -154,11 +158,9 @@ const interval = setInterval(() => {
             });
         }
 
-
-
         loadingButton.addEventListener("click", startIntro);
     }
-}, 30); // 30ms * 100 = 3000ms (3 giây)
+}, 30);
 
 // Load Scene + CasePC + light + leds + Monitor
 (async () => {
@@ -183,7 +185,6 @@ const interval = setInterval(() => {
 
         const { meshes: socialLinks, setupInteractions } = await loadSocialLinks(scene, "/models/Social_Link.glb");
         setupInteractions(renderer, camera);
-
 
         animate();
     } catch (err) {
@@ -228,7 +229,6 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
             targetUrl = "https://drive.google.com/file/d/1T7mFB0s8Ew5PUFrE00vDLYDXaAzSGkEX/view";
         }
 
-        // Hiệu ứng popup
         gsap.to(item, {
             scale: 5,
             duration: 0.2,
@@ -240,7 +240,7 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
                     ease: "back.out(2)",
                     onComplete: () => {
                         if (targetUrl) {
-                            window.open(targetUrl, "_blank"); // mở tab mới
+                            window.open(targetUrl, "_blank");
                         }
                     }
                 });
@@ -248,5 +248,3 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
         });
     });
 });
-
-
