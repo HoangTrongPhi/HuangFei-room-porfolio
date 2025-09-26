@@ -74,6 +74,9 @@ const progressBar = document.querySelector(".loading-progress");
 const loadingHint = document.querySelector(".loading-hint");
 const loadingTitle = document.querySelector(".loading-title");
 
+// Background music biến toàn cục
+let bgMusic;
+
 // Fake loading (3 giây với progress bar)
 let progress = 0;
 const interval = setInterval(() => {
@@ -107,7 +110,7 @@ const interval = setInterval(() => {
                     loadingScreen.remove();
 
                     // ===== Background Music =====
-                    const bgMusic = new Audio("/music/LittlerootTown_Pokemon.ogg");
+                    bgMusic = new Audio("/music/LittlerootTown_Pokemon.ogg");
                     bgMusic.loop = true;
                     bgMusic.volume = 0.6;
                     bgMusic.muted = false;
@@ -178,10 +181,20 @@ const interval = setInterval(() => {
 
         animateLEDs = await loadRGBleds(scene);
 
-        const { meshes: monitorScreens, updateVideo } = await loadMonitorScreens(
-            scene, "/models/Monitor.glb", "/media/test_Video.mp4", { screens: CONFIG.screens }
+        // Thay thế đoạn gọi loadMonitorScreens trong main.js bằng code sau:
+
+        const { meshes: monitorScreens, updateVideos } = await loadMonitorScreens(
+            scene,
+            "/models/Monitor.glb",
+            {
+                Screen_01: "/media/monitor_1.mp4",
+                Screen_02: "/media/monitor_2.mp4",
+                Screen_03: "/media/monitor_3.mp4"
+            },
+            { screens: CONFIG.screens }
         );
-        updateMonitorVideo = updateVideo;
+        updateMonitorVideo = updateVideos;
+
 
         const { meshes: socialLinks, setupInteractions } = await loadSocialLinks(scene, "/models/Social_Link.glb");
         setupInteractions(renderer, camera);
@@ -247,4 +260,17 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
             }
         });
     });
+});
+
+// ====== SOUND TOGGLE BUTTON ======
+const soundToggle = document.querySelector("#sound-toggle");
+soundToggle?.addEventListener("click", () => {
+    if (!bgMusic) return;
+    if (bgMusic.muted) {
+        bgMusic.muted = false;
+        soundToggle.textContent = "🔊";
+    } else {
+        bgMusic.muted = true;
+        soundToggle.textContent = "🔇";
+    }
 });

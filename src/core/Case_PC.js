@@ -97,7 +97,7 @@ export async function loadCasePC(
 
             // === Tạo video texture cho AIO ===
             const video = document.createElement("video");
-            video.src = "media/test_Video.mp4"; // path trong public/
+            video.src = "media/itachi.mp4"; // path trong public/
             video.loop = true;
             video.muted = true;
             video.autoplay = true;
