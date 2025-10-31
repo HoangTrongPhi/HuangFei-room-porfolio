@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 // Material LED đơn giản với emissive (hỗ trợ hex string)
-function createLedMaterial(color = "#ffffff", intensity = 2) {
+function createLedMaterial(color = "#ffffff", intensity = 1 ) {
     const col = new THREE.Color(color);
 
     return new THREE.MeshStandardMaterial({
@@ -29,7 +29,7 @@ function createChasingMaterials() {
         new THREE.MeshStandardMaterial({
             color: new THREE.Color(color),
             emissive: new THREE.Color(color),
-            emissiveIntensity: 12000
+            emissiveIntensity: 0.7
         })
     );
 }
@@ -61,7 +61,7 @@ function createGradientMaterial() {
         map: texture,
         emissive: new THREE.Color(0xffffff),
         emissiveMap: texture,
-        emissiveIntensity: 1500,
+        emissiveIntensity: 1,
         transparent: true,
     });
 }
@@ -76,7 +76,7 @@ function createGradientMaterial() {
 export async function loadCasePC(
     scene,
     fanRotationSpeed = 10,
-    aioBrightness = 2.0,
+    aioBrightness = 1,
     aioFlip = { flipX: false, flipY: false }
 ) {
     return new Promise((resolve, reject) => {
@@ -102,7 +102,7 @@ export async function loadCasePC(
             video.muted = true;
             video.autoplay = true;
             video.playsInline = true;
-
+            video.intensity = 1;
             video.addEventListener("canplay", () => {
                 video.play().catch(err => {
                     console.warn("Autoplay bị chặn:", err);

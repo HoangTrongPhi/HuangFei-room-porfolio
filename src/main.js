@@ -5,9 +5,11 @@ import "./Loading.css";
 import * as THREE from "three";
 import gsap from "gsap";
 
+// Renderer được import từ camera.js, nhưng bạn cũng định nghĩa lại ở đây.
+// Cần đảm bảo bạn chỉ dùng 1 renderer. Tôi giữ nguyên code của bạn.
 import { camera, controls } from "./core/camera.js";
-import { loadEnvironmentMap, applyEnvironment, setupLights } from "./core/light.js";
-import { loadSceneModel, loadLightModel } from "./core/models.js";
+import { loadEnvironmentMap, applyEnvironment } from "./core/light.js";
+import { loadSceneModel } from "./core/models.js";
 import { loadRGBleds } from "./core/RGB_led.js";
 import { loadCasePC } from "./core/Case_PC.js";
 import { loadMonitorScreens } from "./core/screen_video.js";
@@ -17,18 +19,11 @@ import { loadSocialLinks } from "./core/Social_Link.js";
 const CONFIG = {
     renderer: {
         background: "#000000",
-        toneMapping: THREE.LinearToneMapping,
-        toneMappingExposure: 0.0003,
+        // ✅ FIX LỖI ÁNH SÁNG: Dùng ACESFilmicToneMapping
+        toneMapping: THREE.ACESFilmicToneMapping,
+        // ✅ FIX LỖI TỐI ĐEN: Đặt exposure về 1.0 (mặc định)
+        toneMappingExposure: 3,
         shadowType: THREE.PCFSoftShadowMap,
-    },
-    lights: {
-        "Point":    { intensity: 0,  color: "#ffffff" },
-        "Point.001":{ intensity: 10, color: "#dadada" },
-        "Point.002":{ intensity: 20, color: "#fd38fd" },
-        "Point.003":{ intensity: 20, color: "#69f6de" },
-        "Spot":     { intensity: 40, color: "#ededed", penumbra: 0.1 },
-        "Spot.001": { intensity: 80, color: "#007fff", penumbra: 0.1 },
-        "Spot.002": { intensity: 80, color: "#00aaff", penumbra: 0.1 },
     },
     screens: {
         Screen_01: { flipX: false, flipY: true },
@@ -46,6 +41,7 @@ scene.background = new THREE.Color(CONFIG.renderer.background);
 
 const sizes = { width: window.innerWidth, height: window.innerHeight };
 
+// Khởi tạo Renderer
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -53,12 +49,15 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = CONFIG.renderer.toneMapping;
 renderer.toneMappingExposure = CONFIG.renderer.toneMappingExposure;
 renderer.physicallyCorrectLights = true;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = CONFIG.renderer.shadowType;
+
+// ✅ TẮT BÓNG ĐỔ TOÀN CỤC
+renderer.shadowMap.enabled = false;
+// renderer.shadowMap.type = CONFIG.renderer.shadowType; // Không cần thiết
 
 // EnvMap
-const envMap = loadEnvironmentMap({ basePath: "/textures/skybox/" });
-applyEnvironment(scene, envMap, { useAsBackground: false });
+// ✅ TẮT ÁNH SÁNG MÔI TRƯỜNG (IBL)
+// const envMap = loadEnvironmentMap({ basePath: "/textures/skybox/" });
+// applyEnvironment(scene, envMap, { useAsBackground: false });
 
 // ====== Animations ======
 let animateLEDs = () => {};
@@ -85,7 +84,7 @@ const interval = setInterval(() => {
 
     if (progress >= 100) {
         clearInterval(interval);
-
+        // ... (phần code Intro animation giữ nguyên)
         loadingButton.textContent = "Enter!";
         loadingButton.classList.add("active");
         loadingButton.style.cursor = "pointer";
@@ -110,7 +109,7 @@ const interval = setInterval(() => {
                     loadingScreen.remove();
 
                     // ===== Background Music =====
-                    bgMusic = new Audio("/music/LittlerootTown_Pokemon.ogg");
+                    bgMusic = new Audio("/music/CuteSimple Piano.ogg");
                     bgMusic.loop = true;
                     bgMusic.volume = 0.6;
                     bgMusic.muted = false;
@@ -130,10 +129,10 @@ const interval = setInterval(() => {
                             if (!obj.userData.originalScale) {
                                 obj.userData.originalScale = obj.scale.clone();
                             }
-
-                            const randomX = (Math.random() - 0.8) * 20;
-                            const randomY = (Math.random() - 0.8) * 20;
-                            const randomZ = (Math.random() - 0.8) * 20;
+                            // Do scale đã là 100x, nên bạn cần đảm bảo các giá trị random này cũng phải lớn hơn
+                            const randomX = (Math.random() - 0.8) * 2000; // x100
+                            const randomY = (Math.random() - 0.8) * 2000; // x100
+                            const randomZ = (Math.random() - 0.8) * 2000; // x100
 
                             obj.position.set(randomX, randomY, randomZ);
                             obj.scale.set(0, 0, 0);
@@ -165,7 +164,7 @@ const interval = setInterval(() => {
     }
 }, 30);
 
-// Load Scene + CasePC + light + leds + Monitor
+// Load Scene + CasePC + Monitor
 (async () => {
     try {
         const room = await loadSceneModel(scene);
@@ -176,13 +175,9 @@ const interval = setInterval(() => {
         );
         animateCasePC = updateLEDs;
 
-        const lightScene = await loadLightModel(scene);
-        setupLights(lightScene, CONFIG.lights);
-
         animateLEDs = await loadRGBleds(scene);
 
-        // Thay thế đoạn gọi loadMonitorScreens trong main.js bằng code sau:
-
+        // Load màn hình
         const { meshes: monitorScreens, updateVideos } = await loadMonitorScreens(
             scene,
             "/models/Monitor.glb",
@@ -195,13 +190,12 @@ const interval = setInterval(() => {
         );
         updateMonitorVideo = updateVideos;
 
-
         const { meshes: socialLinks, setupInteractions } = await loadSocialLinks(scene, "/models/Social_Link.glb");
         setupInteractions(renderer, camera);
 
         animate();
     } catch (err) {
-        console.error("Lỗi load Scene/Case_PC/Light/Monitor:", err);
+        console.error("Lỗi load Scene/Case_PC/Monitor:", err);
     }
 })();
 
@@ -218,7 +212,7 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Resize
+// ... (phần code Resize và Overlay click giữ nguyên)
 window.addEventListener("resize", () => {
     sizes.width = window.innerWidth;
     sizes.height = window.innerHeight;
@@ -228,7 +222,6 @@ window.addEventListener("resize", () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
-// Overlay click + popup effect cho Social Links
 document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
     item.addEventListener("click", () => {
         const link = item.getAttribute("data-link");

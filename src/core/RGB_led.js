@@ -15,7 +15,7 @@ export async function loadRGBleds(scene) {
                 map: baseMat?.map || null,
                 color: baseMat?.color || new THREE.Color(0xffffff),
                 emissive: new THREE.Color(0xffffff),
-                emissiveIntensity: 50, // cực sáng để thắng exposure thấp
+                emissiveIntensity: 20, // cực sáng để thắng exposure thấp
             });
             leds.push(obj);
         }
@@ -38,7 +38,7 @@ export async function loadRGBleds(scene) {
 
             // Cập nhật màu emissive
             led.material.emissive.setRGB(r, g, b);
-            led.material.emissiveIntensity = 9000; // luôn sáng mạnh
+            led.material.emissiveIntensity = 1; // luôn sáng mạnh
         });
     }
 
