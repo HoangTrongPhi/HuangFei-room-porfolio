@@ -232,7 +232,7 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
         } else if (link === "#contact") {
             targetUrl = "https://www.linkedin.com/in/hoangtrongphi2511/";
         } else if (link === "#about") {
-            targetUrl = "https://drive.google.com/drive/u/0/folders/1TRbTRjFWWdXCvMOJLnZYTyfH07sgigSo";
+            targetUrl = "https://drive.google.com/file/d/1pKxLZ-ShRPhx8gRJbNeczxqkZkCbWmj0/view?usp=drive_link";
         }
 
         gsap.to(item, {
