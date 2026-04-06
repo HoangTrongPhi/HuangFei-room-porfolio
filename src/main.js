@@ -19,9 +19,9 @@ import { loadSocialLinks } from "./core/Social_Link.js";
 const CONFIG = {
     renderer: {
         background: "#000000",
-        // ✅ FIX LỖI ÁNH SÁNG: Dùng ACESFilmicToneMapping
+        // FIX LỖI ÁNH SÁNG: Dùng ACESFilmicToneMapping
         toneMapping: THREE.ACESFilmicToneMapping,
-        // ✅ FIX LỖI TỐI ĐEN: Đặt exposure về 1.0 (mặc định)
+        // FIX LỖI TỐI ĐEN: Đặt exposure về 1.0 (mặc định)
         toneMappingExposure: 3,
         shadowType: THREE.PCFSoftShadowMap,
     },
@@ -50,12 +50,12 @@ renderer.toneMapping = CONFIG.renderer.toneMapping;
 renderer.toneMappingExposure = CONFIG.renderer.toneMappingExposure;
 renderer.physicallyCorrectLights = true;
 
-// ✅ TẮT BÓNG ĐỔ TOÀN CỤC
+// TẮT BÓNG ĐỔ TOÀN CỤC
 renderer.shadowMap.enabled = false;
 // renderer.shadowMap.type = CONFIG.renderer.shadowType; // Không cần thiết
 
 // EnvMap
-// ✅ TẮT ÁNH SÁNG MÔI TRƯỜNG (IBL)
+// TẮT ÁNH SÁNG MÔI TRƯỜNG (IBL)
 // const envMap = loadEnvironmentMap({ basePath: "/textures/skybox/" });
 // applyEnvironment(scene, envMap, { useAsBackground: false });
 
@@ -228,11 +228,11 @@ document.querySelectorAll("#ui-overlay .menu-item").forEach(item => {
         let targetUrl = "";
 
         if (link === "#mywork") {
-            targetUrl = "https://drive.google.com/drive/folders/1TRbTRjFWWdXCvMOJLnZYTyfH07sgigSo";
+            targetUrl = "https://drive.google.com/file/d/1ew7p4o9LU8ICZqbRo4OMR2Ul2i61Cpie/view?usp=drive_link";
         } else if (link === "#contact") {
             targetUrl = "https://www.linkedin.com/in/hoangtrongphi2511/";
         } else if (link === "#about") {
-            targetUrl = "https://drive.google.com/file/d/1Z06MbnvovaUGcFLAoLwAToa1oqWjsMhg/view?usp=drive_link";
+            targetUrl = "https://drive.google.com/drive/u/0/folders/1TRbTRjFWWdXCvMOJLnZYTyfH07sgigSo";
         }
 
         gsap.to(item, {
