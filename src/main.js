@@ -14,6 +14,7 @@ import { loadMonitorScreens } from "./core/screen_video.js";
 import { loadSocialLinks } from "./core/Social_Link.js";
 import { initLoadingScreen } from "./ui/loading.js";
 import { initMenu } from "./ui/menu.js";
+import { track } from "./core/analytics.js";
 
 // ================== CONFIG ==================
 const CONFIG = {
@@ -72,9 +73,11 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.renderer.background);
 
 // ===== UI =====
+track("visit");
 let bgMusic = null;
 
 initLoadingScreen(scene, () => {
+    track("enter");
     // Phát nhạc sau khi người dùng bấm Enter (trình duyệt chặn autoplay có tiếng)
     bgMusic = new Audio(CONFIG.music.src);
     bgMusic.loop = true;

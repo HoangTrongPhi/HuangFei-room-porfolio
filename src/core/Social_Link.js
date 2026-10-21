@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import gsap from "gsap";
 import { loadGLB } from "./loader.js";
+import { track } from "./analytics.js";
 
 const BASE_SCALE = 0.01;
 const HOVER_SCALE = 0.013;
@@ -71,7 +72,9 @@ export async function loadSocialLinks(scene, path, links) {
             const clicked = pick(event);
             if (!clicked) return;
             const key = Object.keys(links).find((k) => clicked.name.includes(k));
-            if (key) window.open(links[key], "_blank", "noopener,noreferrer");
+            if (!key) return;
+            track("click", key.toLowerCase());
+            window.open(links[key], "_blank", "noopener,noreferrer");
         });
     }
 

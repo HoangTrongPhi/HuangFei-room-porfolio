@@ -1,6 +1,7 @@
 // ui/menu.js
 // Menu overlay bên phải: các nút mở link + nút bật/tắt nhạc.
 import gsap from "gsap";
+import { track } from "../core/analytics.js";
 
 /**
  * @param {Object<string,string>} links - { giá trị data-link: URL }
@@ -10,6 +11,7 @@ export function initMenu(links, getMusic) {
     document.querySelectorAll("#ui-overlay .menu-item[data-link]").forEach((item) => {
         item.addEventListener("click", () => {
             const url = links[item.dataset.link];
+            track("click", item.dataset.link.replace("#", ""));
             // Nảy lên rồi thu về, xong mới mở link
             gsap.timeline({ onComplete: () => url && window.open(url, "_blank", "noopener,noreferrer") })
                 .to(item, { scale: 5, duration: 0.2, ease: "back.out(2)" })

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Portfolio Admin</title>
+</head>
+<body>
+<header class="topbar">
+  <h1>Portfolio Analytics</h1>
+  <div class="topbar-right">
+    <span id="user-email"></span>
+    <button id="logout" class="btn btn-ghost" hidden>Đăng xuất</button>
+  </div>
+</header>
+
+<!-- Đăng nhập -->
+<main id="login-view" class="login" hidden>
+  <form id="login-form" class="card login-card">
+    <h2>Đăng nhập admin</h2>
+    <label>Email <input type="email" name="email" autocomplete="username" required /></label>
+    <label>Mật khẩu <input type="password" name="password" autocomplete="current-password" required /></label>
+    <button type="submit" class="btn">Đăng nhập</button>
+    <p id="login-error" class="error" role="alert"></p>
+  </form>
+</main>
+
+<!-- Dashboard -->
+<main id="dash-view" class="dash" hidden>
+  <section class="filters">
+    <label>Khoảng thời gian
+      <select id="f-range">
+        <option value="7">7 ngày</option>
+        <option value="30" selected>30 ngày</option>
+        <option value="90">90 ngày</option>
+        <option value="0">Tất cả</option>
+      </select>
+    </label>
+    <label>Công ty (ref)
+      <select id="f-ref"><option value="">Tất cả</option></select>
+    </label>
+    <button id="refresh" class="btn btn-ghost">Làm mới</button>
+    <span id="status" class="muted"></span>
+  </section>
+
+  <section class="kpis">
+    <div class="card kpi"><span class="kpi-label">Lượt truy cập</span><span class="kpi-value" id="k-visits">–</span></div>
+    <div class="card kpi"><span class="kpi-label">Người xem (phiên)</span><span class="kpi-value" id="k-sessions">–</span></div>
+    <div class="card kpi"><span class="kpi-label">IP khác nhau</span><span class="kpi-value" id="k-ips">–</span></div>
+    <div class="card kpi"><span class="kpi-label">Công ty đã mở</span><span class="kpi-value" id="k-refs">–</span></div>
+    <div class="card kpi"><span class="kpi-label">Lượt click</span><span class="kpi-value" id="k-clicks">–</span></div>
+  </section>
+
+  <section class="grid">
+    <div class="card chart-card wide"><h3>Lượt truy cập theo ngày</h3><div class="chart-box"><canvas id="c-daily"></canvas></div></div>
+    <div class="card chart-card"><h3>Theo công ty</h3><div class="chart-box"><canvas id="c-refs"></canvas></div></div>
+    <div class="card chart-card"><h3>Nút được click</h3><div class="chart-box"><canvas id="c-clicks"></canvas></div></div>
+    <div class="card chart-card"><h3>Quốc gia</h3><div class="chart-box"><canvas id="c-countries"></canvas></div></div>
+    <div class="card chart-card">
+      <h3>Tạo link theo dõi cho công ty</h3>
+      <form id="link-form" class="link-form">
+        <input id="link-name" placeholder="vd: fpt-software" pattern="[a-zA-Z0-9_\-]{1,40}" required />
+        <button class="btn">Tạo</button>
+      </form>
+      <p class="muted small">Chỉ dùng chữ không dấu, số, dấu - hoặc _. Gửi link này kèm CV cho công ty đó.</p>
+      <div id="link-out" class="link-out" hidden>
+        <code id="link-text"></code>
+        <button id="link-copy" class="btn btn-ghost">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Chi tiết gần nhất <span class="muted small" id="table-count"></span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Thời gian</th><th>Sự kiện</th><th>Công ty</th><th>IP</th><th>Vị trí</th><th>Thiết bị</th><th>Đến từ</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="/src/admin/admin.js"></script>
+</body>
+</html>
