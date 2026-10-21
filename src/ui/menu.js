@@ -11,7 +11,7 @@ export function initMenu(links, getMusic) {
         item.addEventListener("click", () => {
             const url = links[item.dataset.link];
             // Nảy lên rồi thu về, xong mới mở link
-            gsap.timeline({ onComplete: () => url && window.open(url, "_blank") })
+            gsap.timeline({ onComplete: () => url && window.open(url, "_blank", "noopener,noreferrer") })
                 .to(item, { scale: 5, duration: 0.2, ease: "back.out(2)" })
                 .to(item, { scale: 1, duration: 0.2, ease: "back.out(2)" });
         });

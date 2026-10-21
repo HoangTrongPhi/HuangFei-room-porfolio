@@ -71,7 +71,7 @@ export async function loadSocialLinks(scene, path, links) {
             const clicked = pick(event);
             if (!clicked) return;
             const key = Object.keys(links).find((k) => clicked.name.includes(k));
-            if (key) window.open(links[key], "_blank");
+            if (key) window.open(links[key], "_blank", "noopener,noreferrer");
         });
     }
 
