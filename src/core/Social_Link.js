@@ -4,6 +4,7 @@ import * as THREE from "three";
 import gsap from "gsap";
 import { loadGLB } from "./loader.js";
 import { track } from "./analytics.js";
+import { setPointer } from "./interactions.js";
 
 const BASE_SCALE = 0.01;
 const HOVER_SCALE = 0.013;
@@ -65,7 +66,7 @@ export async function loadSocialLinks(scene, path, links) {
                 if (target) hover(target);
                 hovered = target;
             }
-            domElement.style.cursor = target ? "pointer" : "";
+            setPointer(domElement, "social", !!target);
         });
 
         domElement.addEventListener("click", (event) => {

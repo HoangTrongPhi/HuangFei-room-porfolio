@@ -21,6 +21,10 @@ import { createAboutPopup } from "./ui/popups/about.js";
 import { createContactPopup } from "./ui/popups/contact.js";
 import { getVisitorName, showWelcome } from "./ui/welcome.js";
 import { createBloom } from "./core/bloom.js";
+import { createCameraFocus } from "./core/cameraFocus.js";
+import { createInteractions } from "./core/interactions.js";
+import { createAudioLevel } from "./core/audioLevel.js";
+import { createHotspots } from "./ui/hotspots.js";
 import { track } from "./core/analytics.js";
 import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES } from "./content.js";
 
@@ -70,6 +74,12 @@ const CONFIG = {
         },
     },
     music: { src: "/music/CuteSimple Piano.ogg", volume: 0.6 },
+    // Vật thể bấm được: bay camera tới (view = hướng nhìn từ vật thể tới camera) rồi mở popup
+    spots: {
+        monitor: { label: "My work", popup: "work", view: [1, 0.35, 0.15] },
+        casePC: { label: "About me", popup: "about", view: [1, 0.45, 0.8] },
+        social: { label: "Contact", popup: "contact", view: [0.25, 0.3, 1] },
+    },
 };
 // =============================================
 
@@ -88,11 +98,11 @@ const updaters = [];
 // Load song song; một model lỗi không làm hỏng các model còn lại
 const tasks = {
     room: loadSceneModel(scene),
-    casePC: loadCasePC(scene, CONFIG.casePC).then(({ update }) => updaters.push(update)),
+    casePC: loadCasePC(scene, CONFIG.casePC).then((pc) => { updaters.push(pc.update); return pc; }),
     rgbLeds: loadRGBleds(scene).then((update) => updaters.push(update)),
     monitor: loadMonitorScreens(scene, CONFIG.monitor.model, CONFIG.monitor.videos, CONFIG.monitor.flips),
     social: loadSocialLinks(scene, CONFIG.social.model, CONFIG.social.links)
-        .then(({ setupInteractions }) => setupInteractions(camera, canvas)),
+        .then((social) => { social.setupInteractions(camera, canvas); return social; }),
 };
 Object.entries(tasks).forEach(([name, task]) =>
     task.catch((err) => console.error(`Lỗi load "${name}":`, err))
@@ -101,9 +111,16 @@ Object.entries(tasks).forEach(([name, task]) =>
 // ===== UI =====
 track("visit");
 let bgMusic = null;
+let audioLevel = null;
 const visitor = getVisitorName(REF_NAMES);
+const ready = Promise.allSettled(Object.values(tasks));
 
-initLoadingScreen(scene, Promise.allSettled(Object.values(tasks)), {
+const focus = createCameraFocus(camera, controls);
+const interactions = createInteractions(camera, canvas);
+interactions.setEnabled(false); // bật sau khi intro xong
+let hotspots = null;
+
+initLoadingScreen(scene, ready, {
     name: PROFILE.name,
     role: PROFILE.role,
     visitor,
@@ -113,9 +130,17 @@ initLoadingScreen(scene, Promise.allSettled(Object.values(tasks)), {
         bgMusic = new Audio(CONFIG.music.src);
         bgMusic.loop = true;
         bgMusic.volume = CONFIG.music.volume;
+        try {
+            audioLevel = createAudioLevel(bgMusic);
+        } catch (err) {
+            console.warn("Không bật được Web Audio, LED sẽ không nháy theo nhạc:", err);
+        }
         bgMusic.play().catch((err) => console.warn("Autoplay bị chặn:", err));
-        // Chào sau khi intro bay vào xong
-        if (visitor) setTimeout(() => showWelcome(visitor), 2200);
+    },
+    onIntroDone() {
+        hotspots?.show();
+        interactions.setEnabled(true);
+        if (visitor) showWelcome(visitor);
     },
 });
 
@@ -128,17 +153,64 @@ initMenu({
     "#contact": (item) => openPopup("contact", item),
 }, () => bgMusic);
 
+// Bấm vật thể / hotspot: camera bay tới → mở popup → đóng popup thì camera bay về
+async function visit(id, objects) {
+    const spot = CONFIG.spots[id];
+    track("click", `spot-${id}`);
+    interactions.setEnabled(false);
+    hotspots.hide();
+    await focus.focus(objects, new THREE.Vector3(...spot.view));
+    openPopup(spot.popup, null, {
+        onClosed: async () => {
+            await focus.reset();
+            hotspots.show();
+            interactions.setEnabled(true);
+        },
+    });
+}
+
+ready.then(async () => {
+    const [monitor, casePC, social] = await Promise.all(
+        [tasks.monitor, tasks.casePC, tasks.social].map((t) => t.catch(() => null))
+    );
+    const meshesOf = (root) => {
+        const list = [];
+        root.traverse((o) => o.isMesh && list.push(o));
+        return list;
+    };
+    const objects = {
+        monitor: monitor && [monitor.root],
+        casePC: casePC && [casePC.root],
+        social: social && Object.values(social.meshes),
+    };
+
+    // Logo mạng xã hội đã có hover/click riêng (mở link) nên chỉ gắn hotspot, không đăng ký tương tác
+    if (monitor) interactions.register("monitor", meshesOf(monitor.root), () => visit("monitor", objects.monitor));
+    if (casePC) interactions.register("casePC", meshesOf(casePC.root), () => visit("casePC", objects.casePC));
+
+    hotspots = createHotspots(camera, Object.entries(objects)
+        .filter(([, objs]) => objs)
+        .map(([id, objs]) => ({ id, label: CONFIG.spots[id].label, objects: objs, onClick: () => visit(id, objs) })));
+    interactions.onHover((id) => hotspots.setActive(id));
+    hotspots.onHover((id, on) => interactions.highlight(id, on));
+});
+
+if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus };
+
 // ===== Render loop =====
 const bloom = CONFIG.bloom.enabled ? createBloom(renderer, CONFIG.bloom) : null;
 const timer = new THREE.Timer();
 timer.connect(document); // tạm dừng khi tab bị ẩn để delta không nhảy vọt lúc quay lại
-renderer.setAnimationLoop((time) => {
-    timer.update(time);
+renderer.setAnimationLoop(() => {
+    // Không truyền timestamp của rAF: nó có thể sớm hơn lúc tạo timer → delta âm ở frame đầu
+    timer.update();
     const delta = timer.getDelta();
-    updaters.forEach((update) => update(delta));
+    const level = audioLevel?.getLevel() ?? 0; // độ lớn nhạc 0 → 1 cho LED
+    updaters.forEach((update) => update(delta, level));
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
     bloom?.render(scene, camera);
+    hotspots?.update();
 });
 
 // ===== Resize =====

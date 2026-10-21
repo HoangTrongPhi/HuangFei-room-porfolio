@@ -9,7 +9,7 @@ import gsap from "gsap";
 import { h, prefersReducedMotion } from "./dom.js";
 
 const popups = new Map();
-let current = null; // { popup, tl, closing }
+let current = null; // { popup, tl, closing, onClosed }
 let returnFocus = null;
 
 /**
@@ -44,9 +44,11 @@ export function createPopup(id, { title, anim = "reveal", className = "", body, 
 
 /**
  * @param {string} id
- * @param {Element} [originEl] - phần tử bấm mở popup; animation xuất phát từ tâm của nó
+ * @param {Element} [originEl] - phần tử bấm mở popup; animation xuất phát từ tâm của nó (mặc định: giữa màn hình)
+ * @param {object} [opt]
+ * @param {() => void} [opt.onClosed] - gọi một lần khi popup này đóng hẳn
  */
-export function openPopup(id, originEl) {
+export function openPopup(id, originEl, { onClosed } = {}) {
     const popup = popups.get(id);
     if (!popup) return;
     if (current) finish(current, true);
@@ -56,7 +58,7 @@ export function openPopup(id, originEl) {
     document.body.classList.add("popup-open");
 
     const tl = buildTimeline(popup, originPoint(originEl));
-    current = { popup, tl, closing: false };
+    current = { popup, tl, closing: false, onClosed };
     popup.onOpen?.();
     popup.closeButton.focus({ preventScroll: true });
 }
@@ -76,6 +78,7 @@ function finish(entry, immediate = false) {
     popup.el.hidden = true;
     gsap.set([popup.el, popup.panel], { clearProps: "all" });
     popup.onClose?.();
+    entry.onClosed?.();
     if (current === entry) current = null;
     if (!immediate) returnFocus?.focus?.({ preventScroll: true });
 }

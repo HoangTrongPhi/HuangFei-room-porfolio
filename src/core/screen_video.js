@@ -9,6 +9,7 @@ import { createVideoTexture } from "./video.js";
  * @param {string} path - đường dẫn Monitor.glb
  * @param {Object<string,string>} videoPaths - { tên mesh màn hình: đường dẫn video }
  * @param {Object<string,{flipX:boolean, flipY:boolean}>} flips - lật video theo từng màn
+ * @returns {Promise<{root: THREE.Object3D, screens: object}>}
  */
 export async function loadMonitorScreens(scene, path, videoPaths, flips = {}) {
     const monitor = await loadGLB(path);
@@ -28,5 +29,5 @@ export async function loadMonitorScreens(scene, path, videoPaths, flips = {}) {
     });
 
     scene.add(monitor);
-    return meshes;
+    return { root: monitor, screens: meshes };
 }

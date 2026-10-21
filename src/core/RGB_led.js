@@ -1,9 +1,9 @@
 // core/RGB_led.js
-// Đèn Yeelight trên tường: đổi màu RGB liên tục theo sóng sin.
+// Đèn Yeelight trên tường: đổi màu RGB liên tục theo sóng sin, sáng bừng theo nhịp nhạc.
 import * as THREE from "three";
 import { loadGLB } from "./loader.js";
 
-/** @returns {Promise<(delta:number)=>void>} hàm update gọi mỗi frame */
+/** @returns {Promise<(delta:number, level:number)=>void>} hàm update gọi mỗi frame (level: độ lớn nhạc 0 → 1) */
 export async function loadRGBleds(scene) {
     const root = await loadGLB("/models/yeelight_led.glb");
 
@@ -24,11 +24,12 @@ export async function loadRGBleds(scene) {
     scene.add(root);
 
     let time = 0;
-    return function update(delta) {
+    return function update(delta, level = 0) {
         time += delta * 2;
         leds.forEach((led, i) => {
             // 3 kênh lệch pha nhau ~120° → chuyển màu cầu vồng; mỗi đèn lệch thêm 0.5
             const phase = time + i * 0.5;
+            led.material.emissiveIntensity = 0.1 + level * 0.9;
             led.material.emissive.setRGB(
                 0.5 + 0.5 * Math.sin(phase),
                 0.5 + 0.5 * Math.sin(phase + 2.0),

@@ -29,6 +29,11 @@ function emit() {
     listeners.forEach((cb) => cb(p));
 }
 
+/** Trạng thái từng file: [{ url, loaded, total, done }] (dùng cho log trên màn hình loading). */
+export function getLoadFiles() {
+    return [...files].map(([url, f]) => ({ url, ...f }));
+}
+
 /** Đăng ký nhận tiến trình tải (0 → 1) của tất cả GLB. */
 export function onLoadProgress(cb) {
     listeners.add(cb);

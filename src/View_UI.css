@@ -40,3 +40,73 @@
     font-size: 22px;
     padding: 8px 14px;
 }
+
+/* ===== Hotspot trên vật thể 3D ===== */
+.hotspots[hidden] { display: none; }
+.hotspots { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+body.popup-open .hotspots { display: none; }
+
+.hotspot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    margin: -9px 0 0 -9px; /* tâm chấm nằm đúng điểm neo */
+    border: 0;
+    background: none;
+    cursor: pointer;
+    pointer-events: auto;
+    font: 600 12px/1 ui-monospace, "Cascadia Code", Consolas, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #e8f6ff;
+}
+
+.hotspot-dot {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0 22%, #66b3ff 30% 55%, rgba(102, 179, 255, 0.2) 60%);
+    box-shadow: 0 0 12px #66b3ff;
+}
+/* Sóng lan ra liên tục */
+.hotspot-dot::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid #66b3ff;
+    animation: hs-ping 1.8s ease-out infinite;
+}
+@keyframes hs-ping { from { transform: scale(0.8); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+
+/* Nhãn trượt ra khi rê chuột vào chấm hoặc vào vật thể */
+.hotspot-label {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 190, 255, 0.4);
+    background: rgba(6, 18, 37, 0.8);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.25s, transform 0.25s;
+}
+.hotspot:hover .hotspot-label,
+.hotspot:focus-visible .hotspot-label,
+.hotspot.is-active .hotspot-label { opacity: 1; transform: none; }
+.hotspot:focus-visible { outline: none; }
+.hotspot:focus-visible .hotspot-dot { outline: 2px solid #b2e7ff; outline-offset: 3px; }
+
+/* Màn hình cảm ứng không có hover: luôn hiện nhãn */
+@media (hover: none) {
+    .hotspot-label { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hotspot-dot::after { animation: none; }
+}

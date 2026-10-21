@@ -45,7 +45,7 @@ function createGradientMaterial() {
  * @param {number} opt.fanSpeed      - tốc độ quay quạt (rad/s)
  * @param {number} opt.aioBrightness - độ sáng màn AIO
  * @param {{flipX:boolean, flipY:boolean}} opt.aioFlip
- * @returns {Promise<{meshes: object, update: (delta:number)=>void}>}
+ * @returns {Promise<{root: THREE.Object3D, meshes: object, update: (delta:number, level:number)=>void}>}
  */
 export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioFlip = {} } = {}) {
     const root = await loadGLB("/models/Case_PC.glb");
@@ -84,15 +84,17 @@ export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioF
     const ramColors = RAM_COLORS.map((c) => new THREE.Color(c));
     let time = 0;
 
-    function update(delta) {
+    // level: độ lớn nhạc 0 → 1 (LED quạt sáng theo nhịp)
+    function update(delta, level = 0) {
         time += delta * 5;
 
         fanLeds.forEach((led) => {
             led.material.map.offset.x = (time * 0.02) % 1;
+            led.material.emissiveIntensity = 1 + level * 2;
         });
 
         // Mỗi thanh RAM lệch 1 màu so với thanh trước → hiệu ứng chạy đuổi
-        const step = Math.floor(time);
+        const step = Math.max(0, Math.floor(time)); // không để chỉ số âm nếu delta frame đầu bị âm
         ramLeds.forEach((led, i) => {
             const color = ramColors[(step + i) % ramColors.length];
             led.material.color.copy(color);
@@ -112,5 +114,5 @@ export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioF
     }
 
     scene.add(root);
-    return { meshes, update };
+    return { root, meshes, update };
 }
