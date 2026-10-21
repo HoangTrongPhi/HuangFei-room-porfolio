@@ -130,9 +130,11 @@ initMenu({
 
 // ===== Render loop =====
 const bloom = CONFIG.bloom.enabled ? createBloom(renderer, CONFIG.bloom) : null;
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
-    const delta = clock.getDelta();
+const timer = new THREE.Timer();
+timer.connect(document); // tạm dừng khi tab bị ẩn để delta không nhảy vọt lúc quay lại
+renderer.setAnimationLoop((time) => {
+    timer.update(time);
+    const delta = timer.getDelta();
     updaters.forEach((update) => update(delta));
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
