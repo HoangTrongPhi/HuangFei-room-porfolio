@@ -21,7 +21,7 @@ function getSessionId() {
 }
 
 // ?ref= ưu tiên; nếu không có thì dùng ref đã lưu trong phiên
-function getRef() {
+export function getRef() {
     const s = storage("session");
     const fromUrl = new URLSearchParams(location.search).get("ref");
     if (fromUrl) s?.setItem("portfolio-ref", fromUrl);

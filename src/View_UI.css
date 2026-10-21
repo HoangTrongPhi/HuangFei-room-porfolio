@@ -12,6 +12,8 @@
 }
 
 #ui-overlay .menu-item {
+    background: none;
+    font-family: inherit;
     color: #b2e7ff;
     font-size: 20px;
     font-weight: bold;

@@ -12,8 +12,30 @@
     height: 100%;
     background: #3368b8;
     border-radius: 5px;
-    transition: width 0.3s linear;
+    box-shadow: 0 0 12px #4d99ff;
 }
+
+.loading-percent {
+    margin: 0;
+    font: 600 0.85rem/1 ui-monospace, "Cascadia Code", Consolas, monospace;
+    color: #7ec0d8;
+    font-variant-numeric: tabular-nums;
+}
+
+.loading-role {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #7ec0d8;
+}
+
+.loading-visitor {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: #85aded;
+}
+.loading-visitor strong { color: #b2e7ff; }
 
 .loading-screen-button {
     margin: 20px auto;
@@ -76,8 +98,11 @@
 
 .loading-title {
     font-size: 2rem;
-    margin-bottom: 20px;
+    margin: 0 0 8px;
+    color: #b2e7ff;
+    text-shadow: 0 0 18px rgba(77, 153, 255, 0.6);
 }
+.loading-title span { display: inline-block; }
 
 .privacy-note {
     margin-top: 28px;

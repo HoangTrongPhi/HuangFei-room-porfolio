@@ -2,6 +2,7 @@
 import "./style.scss";
 import "./View_UI.css";
 import "./Loading.css";
+import "./Popup.css";
 
 import * as THREE from "three";
 
@@ -14,7 +15,14 @@ import { loadMonitorScreens } from "./core/screen_video.js";
 import { loadSocialLinks } from "./core/Social_Link.js";
 import { initLoadingScreen } from "./ui/loading.js";
 import { initMenu } from "./ui/menu.js";
+import { openPopup } from "./ui/popup.js";
+import { createWorkPopup } from "./ui/popups/work.js";
+import { createAboutPopup } from "./ui/popups/about.js";
+import { createContactPopup } from "./ui/popups/contact.js";
+import { getVisitorName, showWelcome } from "./ui/welcome.js";
+import { createBloom } from "./core/bloom.js";
 import { track } from "./core/analytics.js";
+import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES } from "./content.js";
 
 // ================== CONFIG ==================
 const CONFIG = {
@@ -27,6 +35,12 @@ const CONFIG = {
         pos: [7, 5, 7],
         target: [0, 0.1, 0],
         zoom: 0.1, // camera thực tế = target + (pos - target) * zoom
+    },
+    bloom: {
+        enabled: true,
+        strength: 0.8,
+        radius: 0.6,
+        threshold: 0.5, // 0 → 1, tuyến tính trước exposure; tăng lên nếu phòng bị loá
     },
     casePC: {
         fanSpeed: 12,
@@ -49,16 +63,11 @@ const CONFIG = {
     social: {
         model: "/models/Social_Link.glb",
         links: { // từ khoá trong tên mesh → URL
-            Artstation: "https://www.artstation.com/hoangphi",
-            Facebook: "https://www.facebook.com/phi.hoang.568294/",
-            Youtube: "https://www.youtube.com/@phihoang1825/videos",
-            Github: "https://github.com/HoangTrongPhi",
+            Artstation: LINKS.artstation,
+            Facebook: LINKS.facebook,
+            Youtube: LINKS.youtube,
+            Github: LINKS.github,
         },
-    },
-    menuLinks: { // data-link trong index.html → URL
-        "#mywork": "https://drive.google.com/file/d/1ew7p4o9LU8ICZqbRo4OMR2Ul2i61Cpie/view?usp=drive_link",
-        "#contact": "https://www.linkedin.com/in/hoangtrongphi2511/",
-        "#about": "https://drive.google.com/drive/u/0/folders/1TRbTRjFWWdXCvMOJLnZYTyfH07sgigSo",
     },
     music: { src: "/music/CuteSimple Piano.ogg", volume: 0.6 },
 };
@@ -71,20 +80,6 @@ const { camera, controls } = createCamera(canvas, CONFIG.camera);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.renderer.background);
-
-// ===== UI =====
-track("visit");
-let bgMusic = null;
-
-initLoadingScreen(scene, () => {
-    track("enter");
-    // Phát nhạc sau khi người dùng bấm Enter (trình duyệt chặn autoplay có tiếng)
-    bgMusic = new Audio(CONFIG.music.src);
-    bgMusic.loop = true;
-    bgMusic.volume = CONFIG.music.volume;
-    bgMusic.play().catch((err) => console.warn("Autoplay bị chặn:", err));
-});
-initMenu(CONFIG.menuLinks, () => bgMusic);
 
 // ===== Load models =====
 // Các hàm update mỗi frame, được thêm vào khi model tương ứng load xong
@@ -103,13 +98,45 @@ Object.entries(tasks).forEach(([name, task]) =>
     task.catch((err) => console.error(`Lỗi load "${name}":`, err))
 );
 
+// ===== UI =====
+track("visit");
+let bgMusic = null;
+const visitor = getVisitorName(REF_NAMES);
+
+initLoadingScreen(scene, Promise.allSettled(Object.values(tasks)), {
+    name: PROFILE.name,
+    role: PROFILE.role,
+    visitor,
+    onEnter() {
+        track("enter");
+        // Phát nhạc sau khi người dùng bấm Enter (trình duyệt chặn autoplay có tiếng)
+        bgMusic = new Audio(CONFIG.music.src);
+        bgMusic.loop = true;
+        bgMusic.volume = CONFIG.music.volume;
+        bgMusic.play().catch((err) => console.warn("Autoplay bị chặn:", err));
+        // Chào sau khi intro bay vào xong
+        if (visitor) setTimeout(() => showWelcome(visitor), 2200);
+    },
+});
+
+createWorkPopup(WORK, LINKS.portfolioPdf);
+createAboutPopup(PROFILE, ABOUT, LINKS.cv);
+createContactPopup(PROFILE, CONTACT, LINKS);
+initMenu({
+    "#mywork": (item) => openPopup("work", item),
+    "#about": (item) => openPopup("about", item),
+    "#contact": (item) => openPopup("contact", item),
+}, () => bgMusic);
+
 // ===== Render loop =====
+const bloom = CONFIG.bloom.enabled ? createBloom(renderer, CONFIG.bloom) : null;
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
     updaters.forEach((update) => update(delta));
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
+    bloom?.render(scene, camera);
 });
 
 // ===== Resize =====
@@ -118,4 +145,5 @@ window.addEventListener("resize", () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    bloom?.setSize(window.innerWidth, window.innerHeight);
 });

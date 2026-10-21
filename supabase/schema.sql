@@ -43,8 +43,9 @@ create policy "admin reads own row" on public.admins
     for select to authenticated
     using (user_id = auth.uid());
 
--- Cấp quyền admin cho tài khoản bạn đã tạo ở Authentication → Users.
--- ĐỔI email bên dưới thành email tài khoản admin của bạn rồi chạy:
+-- Cấp quyền admin cho (các) tài khoản đang có ở Authentication → Users.
+-- Hãy tạo tài khoản admin của bạn TRƯỚC khi chạy file này. Vì đã tắt đăng ký,
+-- sẽ không ai khác tự tạo được tài khoản để thành admin.
 insert into public.admins (user_id)
-select id from auth.users where email = 'EMAIL_ADMIN_CUA_BAN@example.com'
+select id from auth.users
 on conflict do nothing;
