@@ -1,46 +1,39 @@
-// /core/RGB_led.js
+// core/RGB_led.js
+// Đèn Yeelight trên tường: đổi màu RGB liên tục theo sóng sin.
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { loadGLB } from "./loader.js";
 
+/** @returns {Promise<(delta:number)=>void>} hàm update gọi mỗi frame */
 export async function loadRGBleds(scene) {
-    const loader = new GLTFLoader();
-    const glb = await loader.loadAsync("/models/yeelight_led.glb");
+    const root = await loadGLB("/models/yeelight_led.glb");
 
     const leds = [];
-    glb.scene.traverse((obj) => {
+    root.traverse((obj) => {
         if (obj.isMesh && obj.name.toLowerCase().includes("yeelight_led")) {
-            // Clone material gốc để giữ texture/shader
-            const baseMat = obj.material;
+            const base = obj.material;
             obj.material = new THREE.MeshStandardMaterial({
-                map: baseMat?.map || null,
-                color: baseMat?.color || new THREE.Color(0xffffff),
-                emissive: new THREE.Color(0xffffff),
-                emissiveIntensity: 100, // cực sáng để thắng exposure thấp
+                map: base?.map || null,
+                color: base?.color || new THREE.Color(0xffffff),
+                emissive: 0xffffff,
+                emissiveIntensity: 0.1,
             });
             leds.push(obj);
         }
     });
 
-    scene.add(glb.scene);
-    console.log("LEDs found:", leds.map(l => l.name));
+    scene.add(root);
 
     let time = 0;
-    function animateLEDs(delta) {
+    return function update(delta) {
         time += delta * 2;
-
         leds.forEach((led, i) => {
-            const phase = (time + i * 0.5);
-
-            // Tính RGB theo sin wave
-            const r = 0.5 + 0.5 * Math.sin(phase);
-            const g = 0.5 + 0.5 * Math.sin(phase + 2.0);
-            const b = 0.5 + 0.5 * Math.sin(phase + 4.0);
-
-            // Cập nhật màu emissive
-            led.material.emissive.setRGB(r, g, b);
-            led.material.emissiveIntensity = 0.1; // luôn sáng mạnh
+            // 3 kênh lệch pha nhau ~120° → chuyển màu cầu vồng; mỗi đèn lệch thêm 0.5
+            const phase = time + i * 0.5;
+            led.material.emissive.setRGB(
+                0.5 + 0.5 * Math.sin(phase),
+                0.5 + 0.5 * Math.sin(phase + 2.0),
+                0.5 + 0.5 * Math.sin(phase + 4.0)
+            );
         });
-    }
-
-    return animateLEDs;
+    };
 }

@@ -31,6 +31,9 @@
 
 .loading-screen-button.active {
     opacity: 1; /* khi sẵn sàng */
+    cursor: pointer;
+    background: #a4c0da;
+    color: #193e55;
 }
 
 .loading-screen-button:hover {

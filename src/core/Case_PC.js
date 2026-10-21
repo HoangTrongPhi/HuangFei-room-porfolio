@@ -1,40 +1,13 @@
+// core/Case_PC.js
+// Case PC: quạt quay, LED quạt chạy gradient, LED RAM đổi màu đuổi nhau,
+// màn hình AIO phát video.
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { loadGLB } from "./loader.js";
+import { createVideoTexture } from "./video.js";
 
-// Material LED đơn giản với emissive (hỗ trợ hex string)
-function createLedMaterial(color = "#ffffff", intensity = 1 ) {
-    const col = new THREE.Color(color);
+const RAM_COLORS = ["#fd38fd", "#69f6de", "#f44f4f", "#8bed70", "#fff68e", "#ff908f"];
 
-    return new THREE.MeshStandardMaterial({
-        color: col,
-        emissive: col,
-        emissiveIntensity: intensity,
-        transparent: true,
-    });
-}
-
-// Tạo materials màu thay đổi cho RAM LED chạy đuổi
-function createChasingMaterials() {
-    const colors = [
-        "#fd38fd",
-        "#69f6de",
-        "#f44f4f",
-        "#8bed70",
-        "#fff68e",
-        "#ff908f"
-    ];
-
-    return colors.map(color =>
-        new THREE.MeshStandardMaterial({
-            color: new THREE.Color(color),
-            emissive: new THREE.Color(color),
-            emissiveIntensity: 0.7
-        })
-    );
-}
-
-// Tạo material gradient cho Fan LED
+// Texture gradient cầu vồng cho LED quạt; dịch offset.x để tạo hiệu ứng chạy vòng
 function createGradientMaterial() {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -42,24 +15,19 @@ function createGradientMaterial() {
     const ctx = canvas.getContext("2d");
 
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-    gradient.addColorStop(0, "#ff1f1f");
-    gradient.addColorStop(0.2, "#ffa41d");
-    gradient.addColorStop(0.4, "#ffff1f");
-    gradient.addColorStop(0.6, "#74ff74");
-    gradient.addColorStop(0.8, "#1d1dff");
-    gradient.addColorStop(1, "#ff0cff");
-
+    ["#ff1f1f", "#ffa41d", "#ffff1f", "#74ff74", "#1d1dff", "#ff0cff"].forEach((c, i, arr) =>
+        gradient.addColorStop(i / (arr.length - 1), c)
+    );
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(2, 1);
 
     return new THREE.MeshStandardMaterial({
         map: texture,
-        emissive: new THREE.Color(0xffffff),
+        emissive: 0xffffff,
         emissiveMap: texture,
         emissiveIntensity: 1,
         transparent: true,
@@ -67,147 +35,82 @@ function createGradientMaterial() {
 }
 
 /**
- * Load Case_PC.glb
+ * Load Case_PC.glb. Tên mesh trong GLB quyết định hiệu ứng:
+ *   Fan_Led*            → gradient chạy vòng
+ *   Ram_Led*            → đổi màu đuổi nhau
+ *   Fan_Dynamic*, Graphic_Fan* → quay
+ *   AIO_Cooling_Display → phát video
  * @param {THREE.Scene} scene
- * @param {number} fanRotationSpeed - tốc độ quay quạt
- * @param {number} aioBrightness - độ sáng màn AIO
- * @param {object} aioFlip - cấu hình flip cho AIO (flipX, flipY)
+ * @param {object} opt
+ * @param {number} opt.fanSpeed      - tốc độ quay quạt (rad/s)
+ * @param {number} opt.aioBrightness - độ sáng màn AIO
+ * @param {{flipX:boolean, flipY:boolean}} opt.aioFlip
+ * @returns {Promise<{meshes: object, update: (delta:number)=>void}>}
  */
-export async function loadCasePC(
-    scene,
-    fanRotationSpeed = 10,
-    aioBrightness = 1,
-    aioFlip = { flipX: false, flipY: false }
-) {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
-        loader.setDRACOLoader(dracoLoader);
+export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioFlip = {} } = {}) {
+    const root = await loadGLB("/models/Case_PC.glb");
 
-        loader.load("/models/Case_PC.glb", (gltf) => {
-            const root = gltf.scene;
-            const meshes = {};
-            const ramLeds = [];
-            const fanLeds = [];
-            const dynamicFans = [];
-            let aioDisplay = null; // Màn hình AIO
+    const meshes = {};
+    const fanLeds = [];
+    const ramLeds = [];
+    const fans = [];
+    let aioDisplay = null;
 
-            const chasingMaterials = createChasingMaterials();
+    root.traverse((mesh) => {
+        if (!mesh.isMesh) return;
+        meshes[mesh.name] = mesh;
 
-            // === Tạo video texture cho AIO ===
-            const video = document.createElement("video");
-            video.src = "media/itachi.mp4"; // path trong public/
-            video.loop = true;
-            video.muted = true;
-            video.autoplay = true;
-            video.playsInline = true;
-            video.intensity = 1;
-            video.addEventListener("canplay", () => {
-                video.play().catch(err => {
-                    console.warn("Autoplay bị chặn:", err);
-                });
+        if (mesh.name.startsWith("Fan_Led")) {
+            mesh.material = createGradientMaterial();
+            fanLeds.push(mesh);
+        } else if (mesh.name.startsWith("Ram_Led")) {
+            mesh.material = new THREE.MeshStandardMaterial({ emissiveIntensity: 0.7 });
+            ramLeds.push(mesh);
+        } else if (mesh.name.startsWith("Fan_Dynamic") || mesh.name.startsWith("Graphic_Fan")) {
+            fans.push(mesh);
+        } else if (mesh.name === "AIO_Cooling_Display") {
+            // NoColorSpace: giữ đúng màu như bản trước (texture không convert sRGB)
+            const tex = createVideoTexture("/media/itachi.mp4", { ...aioFlip, colorSpace: THREE.NoColorSpace });
+            mesh.material = new THREE.MeshStandardMaterial({
+                map: tex,
+                emissive: 0xffffff,
+                emissiveMap: tex,
+                transparent: true,
             });
-
-            window.addEventListener("click", () => {
-                if (video.paused) video.play();
-            });
-
-            const baseVideoTexture = new THREE.VideoTexture(video);
-            baseVideoTexture.minFilter = THREE.LinearFilter;
-            baseVideoTexture.magFilter = THREE.LinearFilter;
-            baseVideoTexture.encoding = THREE.sRGBEncoding;
-
-            root.traverse((child) => {
-                if (child.isMesh) {
-                    const mesh = child;
-                    mesh.name = child.name || `Mesh_${Object.keys(meshes).length}`;
-
-                    mesh.castShadow = true;
-                    mesh.receiveShadow = true;
-
-                    // Fan LEDs gradient
-                    if (mesh.name.startsWith("Fan_Led")) {
-                        mesh.material = createGradientMaterial();
-                        fanLeds.push(mesh);
-                    }
-
-                    // RAM LEDs chạy đuổi
-                    if (mesh.name.startsWith("Ram_Led")) {
-                        mesh.material = chasingMaterials[0].clone();
-                        ramLeds.push(mesh);
-                    }
-
-                    // Fan động (quay cánh)
-                    if (
-                        mesh.name.startsWith("Fan_Dynamic") ||
-                        mesh.name.startsWith("Graphic_Fan")
-                    ) {
-                        dynamicFans.push(mesh);
-                    }
-
-                    // AIO Cooling Display
-                    if (mesh.name === "AIO_Cooling_Display") {
-                        // Clone texture riêng để flip
-                        const tex = baseVideoTexture.clone();
-                        tex.needsUpdate = true;
-                        tex.repeat.set(aioFlip.flipX ? -1 : 1, aioFlip.flipY ? -1 : 1);
-                        tex.center.set(0.5, 0.5);
-
-                        mesh.material = new THREE.MeshStandardMaterial({
-                            map: tex,
-                            emissive: new THREE.Color(0xffffff),
-                            emissiveMap: tex,
-                            emissiveIntensity: aioBrightness,
-                            transparent: true,
-                        });
-                        aioDisplay = mesh;
-                    }
-
-                    meshes[mesh.name] = mesh;
-                }
-            });
-
-            // Animation LEDs + quạt + AIO
-            let time = 0;
-            const updateLEDs = (delta) => {
-                time += delta * 5;
-
-                // Fan LEDs gradient chạy vòng
-                fanLeds.forEach((fan) => {
-                    if (fan.material.map) {
-                        fan.material.map.offset.x = (time * 0.02) % 1;
-                    }
-                });
-
-                // RAM LEDs chạy đuổi
-                if (ramLeds.length > 0) {
-                    const index = Math.floor(time) % chasingMaterials.length;
-                    ramLeds.forEach((led, i) => {
-                        const matIndex = (index + i) % chasingMaterials.length;
-                        led.material.color.copy(chasingMaterials[matIndex].color);
-                        led.material.emissive.copy(chasingMaterials[matIndex].emissive);
-                    });
-                }
-
-                // Fan động quay
-                dynamicFans.forEach((fan) => {
-                    if (fan.name === "Fan_Dynamic_01" || fan.name === "Fan_Dynamic_02") {
-                        fan.rotation.x += delta * fanRotationSpeed;
-                    } else {
-                        fan.rotation.y += delta * fanRotationSpeed;
-                    }
-                });
-
-                // AIO Display: pulsating emissiveIntensity dựa trên aioBrightness
-                if (aioDisplay) {
-                    aioDisplay.material.emissiveIntensity =
-                        aioBrightness * (10 + Math.sin(time * 0.5) * 0.25);
-                }
-            };
-
-            scene.add(root);
-            resolve({ meshes, updateLEDs });
-        }, undefined, (error) => reject(error));
+            aioDisplay = mesh;
+        }
     });
+
+    const ramColors = RAM_COLORS.map((c) => new THREE.Color(c));
+    let time = 0;
+
+    function update(delta) {
+        time += delta * 5;
+
+        fanLeds.forEach((led) => {
+            led.material.map.offset.x = (time * 0.02) % 1;
+        });
+
+        // Mỗi thanh RAM lệch 1 màu so với thanh trước → hiệu ứng chạy đuổi
+        const step = Math.floor(time);
+        ramLeds.forEach((led, i) => {
+            const color = ramColors[(step + i) % ramColors.length];
+            led.material.color.copy(color);
+            led.material.emissive.copy(color);
+        });
+
+        // Quạt 01/02 nằm ngang nên quay quanh trục X, còn lại quay quanh Y
+        fans.forEach((fan) => {
+            const axis = fan.name === "Fan_Dynamic_01" || fan.name === "Fan_Dynamic_02" ? "x" : "y";
+            fan.rotation[axis] += delta * fanSpeed;
+        });
+
+        // Màn AIO sáng nhấp nháy nhẹ
+        if (aioDisplay) {
+            aioDisplay.material.emissiveIntensity = aioBrightness * (10 + Math.sin(time * 0.5) * 0.25);
+        }
+    }
+
+    scene.add(root);
+    return { meshes, update };
 }
