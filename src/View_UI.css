@@ -446,6 +446,21 @@ body.popup-open .room-control { opacity: 0.25; pointer-events: none; }
 .rc-row { display: grid; gap: 6px; }
 .rc-row--end { display: flex; justify-content: flex-end; align-items: center; }
 .rc-toggles { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.rc-pixel[hidden] { display: none; }
+.rc-pixel { grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
+.rc-stepper { display: grid; grid-template-columns: 24px 1fr 24px; align-items: center; gap: 6px; }
+.rc-stepper button {
+    height: 22px;
+    padding: 0;
+    border: 1px solid rgba(120, 190, 255, 0.3);
+    border-radius: 6px;
+    background: transparent;
+    color: #9fb6d6;
+    font-size: 10px;
+    cursor: pointer;
+}
+.rc-stepper button:hover { border-color: #b2e7ff; color: #fff; }
+.rc-pixel-name { text-align: center; color: #b2e7ff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rc-toggle { white-space: nowrap; }
 .rc-label { font-size: 11px; color: #9fb6d6; letter-spacing: 0.08em; }
 
@@ -544,20 +559,51 @@ body.popup-open .room-control { opacity: 0.25; pointer-events: none; }
 }
 .rc-reset:hover { border-color: #b2e7ff; color: #ffffff; }
 
-/* Party mode: viền bảng điều khiển + dock đổi màu cầu vồng */
-body.party .room-control, body.party #ui-overlay { animation: party-border 1.2s linear infinite; }
-@keyframes party-border {
-    0% { border-color: #ff6bd6; box-shadow: 0 0 18px rgba(255, 107, 214, 0.5); }
-    33% { border-color: #66e0ff; box-shadow: 0 0 18px rgba(102, 224, 255, 0.5); }
-    66% { border-color: #ffd166; box-shadow: 0 0 18px rgba(255, 209, 102, 0.5); }
-    100% { border-color: #ff6bd6; box-shadow: 0 0 18px rgba(255, 107, 214, 0.5); }
+/* ===== Party mode: mọi panel có dải LED RGB chạy vòng quanh viền + quầng sáng đổi màu =====
+   Dải LED = ::before phủ khít panel, nền conic-gradient xoay (--rgb-angle), mask chỉ chừa lại viền 2px.
+   Panel nào đã dùng ::before cho việc khác thì không nằm trong danh sách này. */
+@property --rgb-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+body.party :is(.hud, .weather, .room-control, #ui-overlay, .popup-panel, .toast, .welcome, .idle-hint, .hotspot-label) {
+    border-color: transparent;
+    animation: party-glow 1.6s linear infinite;
+}
+body.party :is(.toast, .hotspot-label) { position: relative; } /* làm khung chứa cho dải LED */
+body.party :is(.hud, .weather, .room-control, #ui-overlay, .popup-panel, .toast, .welcome, .idle-hint, .hotspot-label)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--rgb-angle), #ff004c, #ff9f1c, #ffe14d, #3dff9a, #00c3ff, #7a5cff, #ff3df2, #ff004c);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+    animation: rgb-spin 2.2s linear infinite;
+}
+/* Thanh tab đáy trên điện thoại không bo góc: chỉ chạy dải LED ở cạnh trên */
+@media (max-width: 720px) {
+    body.party #ui-overlay::before { padding: 2px 0 0; }
+}
+@keyframes rgb-spin { to { --rgb-angle: 360deg; } }
+@keyframes party-glow {
+    0%, 100% { box-shadow: 0 0 22px rgba(255, 61, 242, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35); }
+    25% { box-shadow: 0 0 22px rgba(0, 195, 255, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35); }
+    50% { box-shadow: 0 0 22px rgba(61, 255, 154, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35); }
+    75% { box-shadow: 0 0 22px rgba(255, 159, 28, 0.45), 0 10px 30px rgba(0, 0, 0, 0.35); }
 }
 
 @media (max-width: 720px) {
     .room-control { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-    body.party .room-control, body.party #ui-overlay { animation: none; }
+    body.party :is(.hud, .weather, .room-control, #ui-overlay, .popup-panel, .toast, .welcome, .idle-hint, .hotspot-label),
+    body.party :is(.hud, .weather, .room-control, #ui-overlay, .popup-panel, .toast, .welcome, .idle-hint, .hotspot-label)::before { animation: none; }
 }
 
 /* ===== Panel thời tiết (src/ui/weather.js) — góc trái dưới, ngay trên widget nhạc ===== */

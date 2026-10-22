@@ -27,11 +27,11 @@ export async function loadRGBleds(scene) {
 
     let time = 0;
     return function update(delta, level = 0) {
-        const { ledColor, party } = roomFx;
+        const { ledColor, party, ledIntensity } = roomFx;
         time += delta * (party ? 7 : 2);
         leds.forEach((led, i) => {
             const phase = time + i * 0.5;
-            led.material.emissiveIntensity = 0.1 + level * (party ? 2.2 : 0.9);
+            led.material.emissiveIntensity = (0.1 + level * (party ? 2.2 : 0.9)) * ledIntensity;
             if (ledColor) {
                 // Màu cố định, mỗi đèn sáng tối lệch nhau một chút cho đỡ phẳng
                 led.material.emissive.copy(ledColor).multiplyScalar(0.8 + 0.2 * Math.sin(phase));

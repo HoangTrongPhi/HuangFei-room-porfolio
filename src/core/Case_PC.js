@@ -105,19 +105,20 @@ export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioF
 
     // level: độ lớn nhạc 0 → 1 (LED quạt sáng theo nhịp)
     function update(delta, level = 0) {
-        const { ledColor, party } = roomFx;
+        const { ledColor, party, ledIntensity } = roomFx;
         time += delta * (party ? 12 : 5);
 
         if (!!ledColor !== solid || (ledColor && !fanLeds[0]?.material.color.equals(ledColor))) applyFanColor(ledColor);
         fanLeds.forEach((led) => {
             if (led.material.map) led.material.map.offset.x = (time * 0.02) % 1;
-            led.material.emissiveIntensity = 1 + level * (party ? 4 : 2);
+            led.material.emissiveIntensity = (1 + level * (party ? 4 : 2)) * ledIntensity;
         });
 
         // Mỗi thanh RAM lệch 1 màu so với thanh trước → hiệu ứng chạy đuổi
         const step = Math.max(0, Math.floor(time)); // không để chỉ số âm nếu delta frame đầu bị âm
         ramLeds.forEach((led, i) => {
             const color = ledColor ?? ramColors[(step + i) % ramColors.length];
+            led.material.emissiveIntensity = 0.7 * ledIntensity;
             led.material.color.copy(color);
             led.material.emissive.copy(color);
         });

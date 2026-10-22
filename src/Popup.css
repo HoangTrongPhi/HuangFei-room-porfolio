@@ -15,6 +15,15 @@
 /* Cảnh 3D mờ + tối đi khi có popup */
 #experience-canvas { transition: filter 0.5s ease, transform 0.5s ease; }
 body.popup-open #experience-canvas { filter: blur(6px) brightness(0.55); transform: scale(1.03); }
+/* Popup "live": cảnh 3D giữ nguyên, panel nằm sát phải (điện thoại: dạng tấm trượt ở đáy) */
+body.popup-live #experience-canvas { filter: none !important; transform: none !important; }
+.popup.popup--live { place-items: center end; padding: 24px; } /* .popup khai báo sau → cần tăng độ ưu tiên */
+.popup--live .popup-backdrop { background: linear-gradient(to left, rgba(2, 6, 14, 0.55), transparent 45%); }
+@media (max-width: 720px) {
+    .popup.popup--live { place-items: end center; padding: 8px; }
+    .popup--live .popup-backdrop { background: linear-gradient(to top, rgba(2, 6, 14, 0.6), transparent 50%); }
+    .popup--live .popup-panel { max-height: 52dvh; }
+}
 /* Điện thoại: blur toàn màn hình rất tốn → chỉ làm tối */
 @media (max-width: 720px), (pointer: coarse) {
     body.popup-open #experience-canvas { filter: brightness(0.4); transform: none; }
@@ -453,4 +462,39 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 .radar-label:hover .radar-name { fill: #e8f6ff; }
 @media (max-width: 720px) {
     .about-stats { max-width: 300px; }
+}
+
+/* ===== PIXEL: chọn hình cho loa Divoom (src/ui/popups/pixel.js) ===== */
+.popup-panel--pixel { width: min(380px, 100%); }
+.px { display: grid; gap: 12px; }
+.px-intro, .px-hint { margin: 0; font: 12px/1.4 var(--pp-mono); color: var(--pp-muted); }
+.px-hint { text-align: center; }
+.px-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.px-tile {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    border: 1px solid var(--pp-line);
+    border-radius: 10px;
+    background: var(--pp-card);
+    color: var(--pp-text);
+    font: 11px/1 var(--pp-mono);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+}
+.px-tile:hover { transform: translateY(-2px); border-color: rgba(178, 231, 255, 0.6); }
+.px-tile.is-active { border-color: #66e0ff; box-shadow: 0 0 16px rgba(102, 224, 255, 0.45); color: #ffffff; }
+.px-tile:focus-visible { outline: 2px solid var(--pp-soft); outline-offset: 2px; }
+.px-preview {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: #000;
+    image-rendering: pixelated; /* phóng to 16 × 16 mà vẫn giữ pixel vuông */
+    box-shadow: inset 0 0 0 2px #1b2233, 0 0 0 3px #e9e2cf; /* viền kem giống vỏ loa Ditoo */
+}
+@media (max-width: 720px) {
+    .px-grid { gap: 8px; }
+    .px-preview { width: 44px; height: 44px; }
 }

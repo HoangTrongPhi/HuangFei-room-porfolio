@@ -7,6 +7,8 @@ export const roomFx = {
     ledColor: null,
     /** Party mode: LED đổi màu nhanh hơn, nháy theo nhạc mạnh hơn */
     party: false,
+    /** Hệ số độ sáng LED (Yeelight trên tường + LED quạt/RAM trong case): 0 = tắt; mặc định 5% cho dịu mắt */
+    ledIntensity: 0.05,
     /** Màu chủ đạo hiện tại (cho hạt sáng/hologram); cập nhật bởi LED tường mỗi frame */
     accent: new THREE.Color("#66e0ff"),
 };

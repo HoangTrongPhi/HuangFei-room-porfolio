@@ -21,8 +21,9 @@ let returnFocus = null;
  * @param {Node} opt.body
  * @param {() => void} [opt.onOpen]
  * @param {() => void} [opt.onClose] - gọi khi popup đã đóng hẳn
+ * @param {boolean} [opt.live] - panel nằm cạnh phải, không che/làm tối cảnh 3D (cảnh vẫn render để xem thay đổi trực tiếp)
  */
-export function createPopup(id, { title, anim = "reveal", className = "", body, onOpen, onClose }) {
+export function createPopup(id, { title, anim = "reveal", className = "", body, onOpen, onClose, live = false }) {
     const titleId = `popup-${id}-title`;
     const closeButton = h("button", { class: "popup-close", type: "button", "aria-label": "Close", onClick: closePopup }, "✕");
     const head = h("header", { class: "popup-head" },
@@ -31,13 +32,13 @@ export function createPopup(id, { title, anim = "reveal", className = "", body, 
         closeButton,
     );
     const panel = h("div", { class: `popup-panel ${className}` }, head, h("div", { class: "popup-body" }, body));
-    const el = h("div", { class: "popup", role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, hidden: true },
+    const el = h("div", { class: live ? "popup popup--live" : "popup", role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, hidden: true },
         h("div", { class: "popup-backdrop", onClick: closePopup }),
         panel,
     );
     document.body.append(el);
 
-    const popup = { id, el, panel, head, closeButton, anim, onOpen, onClose };
+    const popup = { id, el, panel, head, closeButton, anim, onOpen, onClose, live };
     popups.set(id, popup);
     return popup;
 }
@@ -56,6 +57,7 @@ export function openPopup(id, originEl, { onClosed } = {}) {
     returnFocus = document.activeElement;
     popup.el.hidden = false;
     document.body.classList.add("popup-open");
+    document.body.classList.toggle("popup-live", popup.live);
 
     const tl = buildTimeline(popup, originPoint(originEl));
     current = { popup, tl, closing: false, onClosed };
@@ -67,7 +69,7 @@ export function closePopup() {
     if (!current || current.closing) return;
     const entry = current;
     entry.closing = true;
-    document.body.classList.remove("popup-open");
+    document.body.classList.remove("popup-open", "popup-live");
     entry.tl.eventCallback("onReverseComplete", () => finish(entry));
     entry.tl.timeScale(1.8).reverse();
 }

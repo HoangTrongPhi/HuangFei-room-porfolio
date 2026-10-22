@@ -36,6 +36,8 @@ import { createHolograms } from "./core/holograms.js";
 import { createParticles } from "./core/particles.js";
 import { createRoomControl } from "./ui/roomControl.js";
 import { createWeather } from "./ui/weather.js";
+import { createPixelDisplay } from "./core/pixelDisplay.js";
+import { createPixelPopup } from "./ui/popups/pixel.js";
 import { createIdleHint } from "./ui/idleHint.js";
 import { prefersReducedMotion } from "./ui/dom.js";
 import { track } from "./core/analytics.js";
@@ -93,6 +95,8 @@ const CONFIG = {
         casePC: { label: "About me", popup: "about", view: [1, 0.45, 0.8] },
         social: { label: "Contact", popup: "contact", view: [0.25, 0.3, 1] },
         switch: { label: "Play", popup: "arcade", view: [1, 0.35, 0.2] }, // máy Switch trên kệ dưới màn hình
+        // Loa Divoom: chọn hình màn pixel; fill nhỏ → camera đứng xa hơn, vẫn thấy bối cảnh quanh loa
+        divoom: { label: "Pixel", popup: "pixel", view: [1, 0.3, 0.1], fill: 0.3 },
     },
     // Màn hình hologram chiếu video dự án (WORK có video), lơ lửng hai bên phòng — toạ độ thế giới (mét)
     holograms: {
@@ -145,6 +149,7 @@ const interactions = createInteractions(camera, canvas);
 interactions.setEnabled(false); // bật sau khi intro xong
 let hotspots = null;
 let holograms = null;
+let pixel = null; // màn pixel loa Divoom
 const particles = createParticles(
     scene,
     new THREE.Box3(new THREE.Vector3(...CONFIG.particles.min), new THREE.Vector3(...CONFIG.particles.max)),
@@ -212,7 +217,7 @@ async function visit(id, objects) {
     idleHint.stop();
     interactions.setEnabled(false);
     hotspots.hide();
-    await focus.focus(objects, new THREE.Vector3(...spot.view));
+    await focus.focus(objects, new THREE.Vector3(...spot.view), spot.fill ? { fill: spot.fill } : undefined);
     openPopup(spot.popup, null, {
         onClosed: async () => {
             await focus.reset();
@@ -238,12 +243,22 @@ ready.then(async () => {
         social: social && Object.values(social.meshes),
         // Máy Switch nằm sẵn trong room_portfolio.glb (màn hình, dock, 2 Joy-Con)
         switch: room && ["Screen", "Dock", "Left_ctrl", "Right_ctrl"].map((n) => room.getObjectByName(n)).filter(Boolean),
+        // Loa Divoom (Ditoo): thân, màn pixel, núm, các phím cơ
+        divoom: room && meshesOf(room).filter((m) => ["Body", "Display", "Control"].includes(m.name) || m.name.startsWith("key_cap")),
     };
 
     // Logo mạng xã hội đã có hover/click riêng (mở link) nên chỉ gắn hotspot, không đăng ký tương tác
     if (monitor) interactions.register("monitor", meshesOf(monitor.root), () => visit("monitor", objects.monitor));
     if (casePC) interactions.register("casePC", meshesOf(casePC.root), () => visit("casePC", objects.casePC));
     if (objects.switch?.length) interactions.register("switch", objects.switch, () => visit("switch", objects.switch));
+
+    const displayMesh = room?.getObjectByName("Display");
+    if (displayMesh) {
+        pixel = createPixelDisplay(displayMesh, { getBands: () => audioLevel?.getBands() });
+        createPixelPopup(pixel, () => audioLevel?.getBands());
+        roomControl.attachPixel(pixel);
+        interactions.register("divoom", objects.divoom, () => visit("divoom", objects.divoom));
+    }
 
     hotspots = createHotspots(camera, Object.entries(objects)
         .filter(([, objs]) => objs?.length)
@@ -288,8 +303,10 @@ renderer.setAnimationLoop(() => {
     const level = audioLevel?.getLevel() ?? 0; // độ lớn nhạc 0 → 1 cho LED
     hud.updateBands(audioLevel?.getBands());
     // Popup đang che cảnh 3D → ngừng render (giữ khung hình cuối), nhường GPU cho popup / mini game
-    if (document.body.classList.contains("popup-open")) return;
+    // (popup "live" — vd. chọn hình loa Divoom — vẫn render để thấy thay đổi trực tiếp)
+    if (document.body.classList.contains("popup-open") && !document.body.classList.contains("popup-live")) return;
     updaters.forEach((update) => update(delta, level));
+    pixel?.update(delta);
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
     bloom?.render(scene, camera);

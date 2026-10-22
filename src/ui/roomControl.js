@@ -1,6 +1,6 @@
 // ui/roomControl.js
 // Bảng điều khiển căn phòng (góc phải trên): màu LED, độ sáng phòng, độ phát sáng (bloom),
-// Party mode, bật/tắt hạt sáng (mặc định tắt).
+// Party mode, bật/tắt hạt sáng (mặc định tắt), chọn hình màn pixel của loa Divoom.
 // Ghi vào roomFx (LED/hạt sáng đọc mỗi frame) và chỉnh trực tiếp renderer/bloom.
 import * as THREE from "three";
 import gsap from "gsap";
@@ -60,6 +60,8 @@ export function createRoomControl({ renderer, bloom, particles }) {
     };
     const brightness = slider("Brightness", 50, 150, 100, (v) => { renderer.toneMappingExposure = baseExposure * v; });
     const glow = slider("Glow", 0, 200, 100, (v) => { if (bloom) bloom.pass.strength = baseBloom * v; });
+    // Độ sáng LED: Yeelight trên tường + LED quạt/RAM trong case PC (0% = tắt hẳn)
+    const ledLevel = slider("LED intensity", 0, 300, roomFx.ledIntensity * 100, (v) => { roomFx.ledIntensity = v; });
 
     // ----- Công tắc bật/tắt -----
     const toggle = (label, onChange) => {
@@ -90,10 +92,29 @@ export function createRoomControl({ renderer, bloom, particles }) {
     function resetAll() {
         setColor(null, "rainbow");
         [brightness, glow].forEach((s) => { s.input.value = 100; s.out.textContent = "100%"; });
+        ledLevel.input.value = 5;
+        ledLevel.out.textContent = "5%";
+        roomFx.ledIntensity = 0.05;
         renderer.toneMappingExposure = baseExposure;
         if (bloom) bloom.pass.strength = baseBloom;
         if (roomFx.party) party.click();
         if (sparkles.getAttribute("aria-checked") === "true") sparkles.click();
+    }
+
+    // ----- Màn pixel loa Divoom (gắn sau khi model phòng tải xong: attachPixel) -----
+    let pixel = null;
+    const pixelName = h("output", { class: "rc-pixel-name" }, "—");
+    const pixelRow = h("div", { class: "rc-row rc-pixel", hidden: true },
+        h("span", { class: "rc-label" }, "Pixel"),
+        h("div", { class: "rc-stepper" },
+            h("button", { type: "button", "aria-label": "Previous pixel animation", onClick: () => stepPixel(-1) }, "◀"),
+            pixelName,
+            h("button", { type: "button", "aria-label": "Next pixel animation", onClick: () => stepPixel(1) }, "▶"),
+        ),
+    );
+    function stepPixel(dir) {
+        pixel?.cycle(dir);
+        track("click", `pixel-${pixel?.current.id}`);
     }
 
     // ----- Khung + thu gọn -----
@@ -101,6 +122,8 @@ export function createRoomControl({ renderer, bloom, particles }) {
         h("div", { class: "rc-row" }, h("span", { class: "rc-label" }, "LED"), h("div", { class: "rc-swatches" }, swatches, custom)),
         brightness.el,
         glow.el,
+        ledLevel.el,
+        pixelRow,
         h("div", { class: "rc-row rc-toggles" }, party, sparkles),
         h("div", { class: "rc-row rc-row--end" }, reset),
     );
@@ -124,6 +147,13 @@ export function createRoomControl({ renderer, bloom, particles }) {
     document.body.append(panel);
 
     return {
+        /** Hiện dòng chọn hình pixel, đồng bộ với popup của loa */
+        attachPixel(display) {
+            pixel = display;
+            pixelRow.hidden = false;
+            pixelName.textContent = display.current.name;
+            display.onChange((preset) => { pixelName.textContent = preset.name; });
+        },
         show() {
             gsap.from(panel, { x: 30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform,opacity" });
         },
