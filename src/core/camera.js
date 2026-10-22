@@ -19,7 +19,9 @@ export function createCamera(domElement, { pos, target, zoom = 1, fov = 35, near
     controls.dampingFactor = 0.05;
 
     const targetVec = new THREE.Vector3(...target);
-    const offset = new THREE.Vector3(...pos).sub(targetVec).multiplyScalar(zoom);
+    // Màn hình dọc (điện thoại): khung hình hẹp ngang → lùi camera ra để thấy trọn căn phòng
+    const portraitScale = Math.min(1.7, Math.max(1, 0.7 / camera.aspect));
+    const offset = new THREE.Vector3(...pos).sub(targetVec).multiplyScalar(zoom * portraitScale);
     camera.position.copy(targetVec).add(offset);
     controls.target.copy(targetVec);
     controls.update();

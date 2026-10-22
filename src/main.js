@@ -9,6 +9,7 @@ import * as THREE from "three";
 import gsap from "gsap";
 
 import { createRenderer } from "./core/renderer.js";
+import { isMobile, maxPixelRatio } from "./core/device.js";
 import { createCamera } from "./core/camera.js";
 import { loadSceneModel } from "./core/models.js";
 import { loadRGBleds } from "./core/RGB_led.js";
@@ -31,10 +32,14 @@ import { createInteractions } from "./core/interactions.js";
 import { createAudioLevel } from "./core/audioLevel.js";
 import { createHotspots } from "./ui/hotspots.js";
 import { createHud } from "./ui/hud.js";
+import { createHolograms } from "./core/holograms.js";
+import { createParticles } from "./core/particles.js";
+import { createRoomControl } from "./ui/roomControl.js";
+import { createWeather } from "./ui/weather.js";
 import { createIdleHint } from "./ui/idleHint.js";
 import { prefersReducedMotion } from "./ui/dom.js";
 import { track } from "./core/analytics.js";
-import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES } from "./content.js";
+import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES, WEATHER } from "./content.js";
 
 // ================== CONFIG ==================
 const CONFIG = {
@@ -89,6 +94,17 @@ const CONFIG = {
         social: { label: "Contact", popup: "contact", view: [0.25, 0.3, 1] },
         switch: { label: "Play", popup: "arcade", view: [1, 0.35, 0.2] }, // máy Switch trên kệ dưới màn hình
     },
+    // Màn hình hologram chiếu video dự án (WORK có video), lơ lửng hai bên phòng — toạ độ thế giới (mét)
+    holograms: {
+        slots: [
+            [-0.3, 0.25, 0.34],   // trái, trên (vùng trống dưới thẻ tên)
+            [-0.27, 0.13, 0.38],  // trái, dưới
+            [0.28, 0.28, -0.22],  // phải, trên (giữa phòng và dock menu)
+            [0.31, 0.16, -0.18],  // phải, dưới
+        ],
+    },
+    // Vùng hạt sáng bay quanh phòng (mét)
+    particles: { min: [-0.22, 0.02, -0.22], max: [0.28, 0.42, 0.3] },
 };
 // =============================================
 
@@ -128,9 +144,16 @@ const focus = createCameraFocus(camera, controls);
 const interactions = createInteractions(camera, canvas);
 interactions.setEnabled(false); // bật sau khi intro xong
 let hotspots = null;
+let holograms = null;
+const particles = createParticles(
+    scene,
+    new THREE.Box3(new THREE.Vector3(...CONFIG.particles.min), new THREE.Vector3(...CONFIG.particles.max)),
+    renderer.getPixelRatio(),
+);
 let introDone = false;
 let exploring = false; // camera đang bay tới / đang xem một vật thể
 
+const weather = createWeather(WEATHER);
 const hud = createHud({ profile: PROFILE, trackTitle: CONFIG.music.title, getMusic: () => bgMusic });
 const idleHint = createIdleHint(camera, controls, {
     canStart: () => introDone && !exploring && !document.body.classList.contains("popup-open"),
@@ -156,6 +179,10 @@ initLoadingScreen(ready, {
         // Lắp ráp căn phòng; xong thì hiện HUD, hotspot, cho phép tương tác
         playIntro({ scene, camera, controls, renderer, bloom, reduced: prefersReducedMotion() }).then(() => {
             introDone = true;
+            holograms?.reveal();
+            particles.show();
+            roomControl.show();
+            weather.show();
             document.body.classList.add("is-ready"); // hiện dock menu
             hud.show();
             idleHint.schedule();
@@ -166,7 +193,7 @@ initLoadingScreen(ready, {
     },
 });
 
-createWorkPopup(WORK, LINKS.portfolioPdf);
+const workPopup = createWorkPopup(WORK, LINKS.portfolioPdf);
 createAboutPopup(PROFILE, ABOUT, LINKS.cv);
 createContactPopup(PROFILE, CONTACT, LINKS);
 createArcade();
@@ -222,8 +249,21 @@ ready.then(async () => {
         .filter(([, objs]) => objs?.length)
         .map(([id, objs]) => ({ id, label: CONFIG.spots[id].label, objects: objs, onClick: () => visit(id, objs) })));
     // Rê chuột lên vật thể / hotspot → hotspot và nút menu tương ứng cùng sáng
-    const menuLinkOf = (id) => (id ? { work: "#mywork", about: "#about", contact: "#contact" }[CONFIG.spots[id].popup] : null);
+    const menuLinkOf = (id) => ({ work: "#mywork", about: "#about", contact: "#contact" })[CONFIG.spots[id]?.popup] ?? null;
+    // Hologram: bấm → mở thẳng trang chi tiết dự án; hover do shader của hologram tự xử lý (không phủ lớp sáng)
+    holograms = createHolograms(scene, WORK, CONFIG.holograms.slots);
+    holograms.screens.forEach((screen) => {
+        const projectId = screen.userData.projectId;
+        interactions.register(`holo-${projectId}`, [screen], () => {
+            track("click", `holo-${projectId}`);
+            openPopup("work", null);
+            workPopup.showProject(projectId);
+        }, { glow: false });
+    });
+    if (introDone) holograms.reveal();
+
     interactions.onHover((id) => {
+        holograms.setHover(id?.startsWith("holo-") ? id.slice(5) : null);
         hotspots.setActive(id);
         menu.setActive(menuLinkOf(id));
     });
@@ -236,7 +276,9 @@ ready.then(async () => {
 if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
 
 // ===== Render loop =====
-const bloom = CONFIG.bloom.enabled ? createBloom(renderer, CONFIG.bloom) : null;
+// Bloom phải render cả cảnh thêm 1 lần mỗi frame → tắt trên điện thoại cho mượt
+const bloom = CONFIG.bloom.enabled && !isMobile ? createBloom(renderer, CONFIG.bloom) : null;
+const roomControl = createRoomControl({ renderer, bloom, particles });
 const timer = new THREE.Timer();
 timer.connect(document); // tạm dừng khi tab bị ẩn để delta không nhảy vọt lúc quay lại
 renderer.setAnimationLoop(() => {
@@ -244,12 +286,16 @@ renderer.setAnimationLoop(() => {
     timer.update();
     const delta = timer.getDelta();
     const level = audioLevel?.getLevel() ?? 0; // độ lớn nhạc 0 → 1 cho LED
+    hud.updateBands(audioLevel?.getBands());
+    // Popup đang che cảnh 3D → ngừng render (giữ khung hình cuối), nhường GPU cho popup / mini game
+    if (document.body.classList.contains("popup-open")) return;
     updaters.forEach((update) => update(delta, level));
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
     bloom?.render(scene, camera);
     hotspots?.update();
-    hud.updateBands(audioLevel?.getBands());
+    holograms?.update(delta, camera);
+    particles.update(delta, level);
 });
 
 // ===== Resize =====
@@ -257,6 +303,7 @@ window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(maxPixelRatio());
     bloom?.setSize(window.innerWidth, window.innerHeight);
+    particles.setPixelRatio(renderer.getPixelRatio());
 });

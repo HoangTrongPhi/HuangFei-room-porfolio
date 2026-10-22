@@ -39,8 +39,11 @@ export function createHotspots(camera, items) {
         spots.forEach((s) => {
             projected.copy(s.anchor).project(camera);
             const visible = projected.z < 1 && Math.abs(projected.x) < 1.1 && Math.abs(projected.y) < 1.1;
+            const x = (projected.x * 0.5 + 0.5) * w;
             s.el.style.visibility = visible ? "" : "hidden";
-            s.el.style.transform = `translate(${(projected.x * 0.5 + 0.5) * w}px, ${(-projected.y * 0.5 + 0.5) * hgt}px)`;
+            s.el.style.transform = `translate(${x}px, ${(-projected.y * 0.5 + 0.5) * hgt}px)`;
+            // Gần mép phải: lật nhãn sang bên trái chấm để không bị tràn khỏi màn hình
+            s.el.classList.toggle("is-flipped", x > w - 130);
         });
     }
 

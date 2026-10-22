@@ -1,14 +1,15 @@
 // ui/popups/about.js
 // Popup ABOUT: dạng cửa sổ hệ điều hành (kéo được bằng thanh tiêu đề),
-// phần giới thiệu tự gõ chữ, thanh kỹ năng chạy dần, timeline kinh nghiệm.
+// phần giới thiệu tự gõ chữ, thanh kỹ năng chạy dần, timeline kinh nghiệm, bảng chỉ số lục giác kiểu game.
 import gsap from "gsap";
 import { h, openExternal, prefersReducedMotion } from "../dom.js";
 import { createPopup } from "../popup.js";
 import { track } from "../../core/analytics.js";
+import { createStatRadar } from "../statRadar.js";
 
 /**
  * @param {{name:string, role:string}} profile
- * @param {{bio:string, skills:Array, timeline:Array}} about
+ * @param {{bio:string, skills:Array, timeline:Array, stats?:Array<{label:string, value:number}>}} about
  * @param {string} cvUrl
  */
 export function createAboutPopup(profile, about, cvUrl) {
@@ -18,6 +19,8 @@ export function createAboutPopup(profile, about, cvUrl) {
 
     const bio = h("p", { class: "about-bio typing" });
     const bars = about.skills.map((s) => h("span", { class: "skill-fill", "data-level": s.level }));
+    const radar = about.stats?.length ? createStatRadar(about.stats) : null;
+    const average = radar ? Math.round(about.stats.reduce((sum, s) => sum + s.value, 0) / about.stats.length) : 0;
 
     const body = h("div", { class: "about" },
         h("aside", { class: "about-side", "data-stagger": true },
@@ -29,6 +32,10 @@ export function createAboutPopup(profile, about, cvUrl) {
                 type: "button",
                 onClick: () => { track("click", "cv"); openExternal(cvUrl); },
             }, "View CV ↗"),
+            radar && h("div", { class: "about-stats" },
+                h("h4", {}, "> stats", h("span", { class: "about-ovr" }, `OVR ${average}`)),
+                radar.el,
+            ),
         ),
         h("div", { class: "about-main" },
             h("section", { "data-stagger": true }, h("h4", {}, "> whoami"), bio),
@@ -73,6 +80,7 @@ export function createAboutPopup(profile, about, cvUrl) {
                 onUpdate: () => { bio.textContent = about.bio.slice(0, Math.round(state.n)); },
                 onComplete: () => bio.classList.remove("typing"),
             });
+            radar?.play(instant);
             gsap.fromTo(bars, { width: "0%" }, {
                 width: (i, el) => `${el.dataset.level}%`,
                 duration: instant ? 0 : 1,

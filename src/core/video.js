@@ -12,14 +12,10 @@ window.addEventListener("click", () => {
     });
 });
 
-/**
- * @param {string} src - đường dẫn video (trong /public)
- * @param {object} [opt]
- * @param {boolean} [opt.flipX] - lật ngang (khi UV bị ngược)
- * @param {boolean} [opt.flipY] - lật dọc
- * @param {string}  [opt.colorSpace] - mặc định sRGB
- */
-export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace } = {}) {
+// Mỗi file video chỉ tạo 1 thẻ <video>: nhiều texture (vd. màn monitor + hologram) dùng chung, không tải lại
+const bySrc = new Map();
+function getVideo(src) {
+    if (bySrc.has(src)) return bySrc.get(src);
     const video = document.createElement("video");
     video.src = src;
     video.crossOrigin = "anonymous";
@@ -31,8 +27,19 @@ export function createVideoTexture(src, { flipX = false, flipY = false, colorSpa
         video.play().catch((err) => console.warn(`Autoplay bị chặn (${src}):`, err));
     });
     videos.add(video);
+    bySrc.set(src, video);
+    return video;
+}
 
-    const texture = new THREE.VideoTexture(video);
+/**
+ * @param {string} src - đường dẫn video (trong /public)
+ * @param {object} [opt]
+ * @param {boolean} [opt.flipX] - lật ngang (khi UV bị ngược)
+ * @param {boolean} [opt.flipY] - lật dọc
+ * @param {string}  [opt.colorSpace] - mặc định sRGB
+ */
+export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace } = {}) {
+    const texture = new THREE.VideoTexture(getVideo(src));
     texture.colorSpace = colorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;

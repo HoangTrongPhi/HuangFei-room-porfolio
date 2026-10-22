@@ -4,8 +4,12 @@ html, body {
   height: 100%;
   overflow: hidden; // trang 3D toàn màn hình, không cuộn (canvas phóng to khi mở popup)
 }
+body {
+  -webkit-tap-highlight-color: transparent; // bỏ vệt xanh khi chạm trên điện thoại
+}
 #experience-canvas {
   display: block;
+  touch-action: none; // cử chỉ chạm dành cho xoay/zoom camera, không cuộn/zoom trang
   width: 100vw;
   height: 100vh;
 }

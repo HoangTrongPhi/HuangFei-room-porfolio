@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { loadGLB } from "./loader.js";
 import { createVideoTexture } from "./video.js";
+import { roomFx } from "./roomFx.js";
 
 const RAM_COLORS = ["#fd38fd", "#69f6de", "#f44f4f", "#8bed70", "#fff68e", "#ff908f"];
 
@@ -83,20 +84,40 @@ export async function loadCasePC(scene, { fanSpeed = 10, aioBrightness = 1, aioF
 
     const ramColors = RAM_COLORS.map((c) => new THREE.Color(c));
     let time = 0;
+    let solid = false; // LED quạt đang ở màu cố định (bỏ texture gradient)
+
+    // Đổi giữa gradient cầu vồng và màu cố định chọn ở bảng điều khiển
+    function applyFanColor(color) {
+        const wantSolid = !!color;
+        fanLeds.forEach((led) => {
+            const m = led.material;
+            if (wantSolid !== solid) {
+                m.userData.gradient ??= m.map;
+                m.map = wantSolid ? null : m.userData.gradient;
+                m.emissiveMap = m.map;
+                m.needsUpdate = true;
+            }
+            m.color.set(wantSolid ? color : 0xffffff);
+            m.emissive.set(wantSolid ? color : 0xffffff);
+        });
+        solid = wantSolid;
+    }
 
     // level: độ lớn nhạc 0 → 1 (LED quạt sáng theo nhịp)
     function update(delta, level = 0) {
-        time += delta * 5;
+        const { ledColor, party } = roomFx;
+        time += delta * (party ? 12 : 5);
 
+        if (!!ledColor !== solid || (ledColor && !fanLeds[0]?.material.color.equals(ledColor))) applyFanColor(ledColor);
         fanLeds.forEach((led) => {
-            led.material.map.offset.x = (time * 0.02) % 1;
-            led.material.emissiveIntensity = 1 + level * 2;
+            if (led.material.map) led.material.map.offset.x = (time * 0.02) % 1;
+            led.material.emissiveIntensity = 1 + level * (party ? 4 : 2);
         });
 
         // Mỗi thanh RAM lệch 1 màu so với thanh trước → hiệu ứng chạy đuổi
         const step = Math.max(0, Math.floor(time)); // không để chỉ số âm nếu delta frame đầu bị âm
         ramLeds.forEach((led, i) => {
-            const color = ramColors[(step + i) % ramColors.length];
+            const color = ledColor ?? ramColors[(step + i) % ramColors.length];
             led.material.color.copy(color);
             led.material.emissive.copy(color);
         });

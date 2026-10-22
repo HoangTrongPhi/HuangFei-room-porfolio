@@ -12,6 +12,13 @@ export const PROFILE = {
     timeZone: "Asia/Ho_Chi_Minh", // giờ địa phương hiển thị trên thẻ tên
 };
 
+// Panel thời tiết (dữ liệu Open-Meteo, miễn phí, không cần key) — đổi sang thành phố bạn đang sống
+export const WEATHER = {
+    city: "Ho Chi Minh City", // TODO: tên hiển thị
+    latitude: 10.82,
+    longitude: 106.63,
+};
+
 export const LINKS = {
     portfolioPdf: "https://drive.google.com/file/d/1ew7p4o9LU8ICZqbRo4OMR2Ul2i61Cpie/view?usp=drive_link",
     cv: "https://drive.google.com/drive/u/0/folders/1TRbTRjFWWdXCvMOJLnZYTyfH07sgigSo",
@@ -76,6 +83,16 @@ export const ABOUT = {
     timeline: [
         { year: "2025", title: "3D Room Portfolio", place: "Personal project" },
         { year: "20XX", title: "Your role", place: "Company / school" },
+    ],
+    // Bảng chỉ số hình lục giác kiểu game (0 → 100), thứ tự theo chiều kim đồng hồ từ đỉnh trên cùng
+    stats: [
+        // TODO: chỉnh lại chỉ số thật
+        { label: "Problem Solve", value: 82 },
+        { label: "RnD", value: 78 },
+        { label: "Programming", value: 66 },
+        { label: "Design", value: 80 },
+        { label: "Social", value: 70 },
+        { label: "Creative", value: 88 },
     ],
 };
 

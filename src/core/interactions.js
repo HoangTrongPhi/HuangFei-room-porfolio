@@ -31,8 +31,10 @@ export function createInteractions(camera, domElement) {
      * @param {string} id
      * @param {THREE.Mesh[]} meshes
      * @param {() => void} onClick
+     * @param {object} [opt]
+     * @param {boolean} [opt.glow] - false: không phủ lớp sáng (vật thể tự xử lý hover, vd. hologram)
      */
-    function register(id, meshes, onClick) {
+    function register(id, meshes, onClick, { glow: useGlow = true } = {}) {
         const glow = new THREE.MeshBasicMaterial({
             color: 0x66b3ff,
             transparent: true,
@@ -45,6 +47,7 @@ export function createInteractions(camera, domElement) {
             toneMapped: false,
         });
         meshes.forEach((mesh) => {
+            if (!useGlow) return;
             const overlay = new THREE.Mesh(mesh.geometry, glow);
             overlay.userData.skipIntro = true;
             overlay.raycast = () => {}; // không chặn raycast của mesh gốc

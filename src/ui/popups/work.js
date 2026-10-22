@@ -99,7 +99,7 @@ export function createWorkPopup(projects, portfolioUrl) {
         });
     }
 
-    return createPopup("work", {
+    const popup = createPopup("work", {
         title: "My Work",
         anim: "reveal",
         className: "popup-panel--work",
@@ -111,6 +111,16 @@ export function createWorkPopup(projects, portfolioUrl) {
             cards.forEach((c) => c.stop());
         },
     });
+
+    /** Mở thẳng trang chi tiết một dự án (dùng khi bấm hologram trong phòng) */
+    popup.showProject = (id) => {
+        const project = projects.find((p) => p.id === id);
+        if (!project) return;
+        gridView.hidden = true;
+        detailView.hidden = false;
+        showDetail(project);
+    };
+    return popup;
 }
 
 function createCard(project, onSelect) {

@@ -15,6 +15,10 @@
 /* Cảnh 3D mờ + tối đi khi có popup */
 #experience-canvas { transition: filter 0.5s ease, transform 0.5s ease; }
 body.popup-open #experience-canvas { filter: blur(6px) brightness(0.55); transform: scale(1.03); }
+/* Điện thoại: blur toàn màn hình rất tốn → chỉ làm tối */
+@media (max-width: 720px), (pointer: coarse) {
+    body.popup-open #experience-canvas { filter: brightness(0.4); transform: none; }
+}
 body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 #ui-overlay { transition: opacity 0.3s ease; }
 
@@ -208,7 +212,7 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 .popup-panel--about .popup-head { cursor: grab; }
 .popup-panel--about .popup-head.is-dragging { cursor: grabbing; }
 
-.about { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+.about { display: grid; grid-template-columns: 250px 1fr; gap: 24px; }
 .about-side {
     display: grid;
     justify-items: center;
@@ -409,4 +413,44 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
     .popup-panel::after, .about-avatar, .contact-headline { animation: none; }
     .work-card { transform: none; }
+}
+
+/* ----- ABOUT: bảng chỉ số lục giác (src/ui/statRadar.js) ----- */
+.about-stats { width: 100%; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--pp-line); }
+.about-stats h4 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 4px;
+    font: 600 13px/1 var(--pp-mono);
+    color: var(--pp-accent);
+    text-align: left;
+}
+.about-ovr {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #66e0ff, #a07bff);
+    color: #04101f;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+.radar { display: block; width: 100%; height: auto; overflow: visible; }
+.radar-ring { fill: none; stroke: rgba(120, 190, 255, 0.18); stroke-width: 0.8; }
+.radar-ring--outer { stroke: rgba(120, 190, 255, 0.45); stroke-width: 1.2; }
+.radar-axis { stroke: rgba(120, 190, 255, 0.18); stroke-width: 0.8; }
+.radar-area {
+    fill: url(#radar-fill);
+    stroke: #66e0ff;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(102, 224, 255, 0.7));
+}
+.radar-dot { fill: #e8f6ff; stroke: #66e0ff; stroke-width: 1.2; transition: r 0.2s; }
+.radar-dot.is-active { r: 5; fill: #ffd166; }
+.radar-label { cursor: default; }
+.radar-name { fill: #9fb6d6; font: 600 8.5px/1 var(--pp-mono); letter-spacing: 0.04em; text-transform: uppercase; }
+.radar-value { fill: #ffd166; font: 700 10px/1 var(--pp-mono); }
+.radar-label:hover .radar-name { fill: #e8f6ff; }
+@media (max-width: 720px) {
+    .about-stats { max-width: 300px; }
 }
