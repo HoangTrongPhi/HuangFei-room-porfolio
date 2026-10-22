@@ -4,7 +4,7 @@
 
 export const PROFILE = {
     name: "Hoàng Trọng Phi",
-    role: "3D Artist",
+    role: "Technical Artist",
     email: "", // TODO: điền email liên hệ; để trống thì popup Contact ẩn dòng email
 };
 

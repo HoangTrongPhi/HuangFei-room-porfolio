@@ -44,7 +44,7 @@ const CONFIG = {
         enabled: true,
         strength: 0.8,
         radius: 0.6,
-        threshold: 0.5, // 0 → 1, tuyến tính trước exposure; tăng lên nếu phòng bị loá
+        threshold: 1, // 0 → 1, tuyến tính trước exposure; tăng lên nếu phòng bị loá
     },
     casePC: {
         fanSpeed: 12,
