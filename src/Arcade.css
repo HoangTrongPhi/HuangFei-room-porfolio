@@ -1,0 +1,351 @@
+/* ===== Máy chơi game cầm tay (src/ui/arcade/console.js) ===== */
+/* Tỷ lệ theo máy thật: toàn máy 239 × 102 mm → 2.34 : 1; giới hạn thêm theo chiều cao màn hình để không bị tràn */
+.popup-panel--arcade { width: min(1240px, 100%, calc((100dvh - 140px) * 2.34)); }
+.popup-panel--arcade .popup-body { padding: 18px; }
+
+.arc {
+    --jc-left: #19c3f0;
+    --jc-right: #ff4d61;
+    --arc-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    display: grid;
+    /* Joy-Con 35.9 mm mỗi bên (~15%), thân máy 173 mm ở giữa */
+    grid-template-columns: 15% minmax(0, 1fr) 15%;
+    aspect-ratio: 239 / 102;
+    align-items: stretch;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+/* ----- Joy-Con ----- */
+.arc-joycon {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    gap: 14px;
+    padding: 22px 0;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -4px 10px rgba(0, 0, 0, 0.25);
+}
+.arc-joycon--left {
+    border-radius: 56px 10px 10px 56px;
+    background: linear-gradient(160deg, #4fd6f7, var(--jc-left) 45%, #0a8fb8);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -4px 10px rgba(0, 0, 0, 0.25), 0 0 26px rgba(25, 195, 240, 0.35);
+}
+.arc-joycon--right {
+    border-radius: 10px 56px 56px 10px;
+    background: linear-gradient(200deg, #ff7f8d, var(--jc-right) 45%, #c42036);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -4px 10px rgba(0, 0, 0, 0.25), 0 0 26px rgba(255, 77, 97, 0.35);
+}
+
+.arc-btn {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    color: #e8eef7;
+    font: 700 13px/1 var(--arc-mono);
+    background: #23262d;
+    box-shadow: 0 3px 0 #111318, inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: transform 0.06s, box-shadow 0.06s, background 0.15s;
+    touch-action: none;
+}
+.arc-btn.is-down { transform: translateY(2px); box-shadow: 0 1px 0 #111318; background: #2f333c; }
+.arc-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.arc-btn--small { width: 26px; height: 26px; border-radius: 50%; font-size: 15px; }
+.arc-minus { align-self: flex-end; margin-right: 18px; }
+.arc-plus { align-self: flex-start; margin-left: 18px; }
+.arc-home-btn { font-size: 0; position: relative; }
+.arc-home-btn::after { content: "⌂"; font-size: 15px; }
+
+.arc-stick {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #444a55, #1b1d22 70%);
+    box-shadow: 0 4px 0 #0e0f12, inset 0 0 0 5px #2a2d34;
+}
+.arc-capture { width: 18px; height: 18px; border-radius: 4px; background: #23262d; box-shadow: inset 0 0 0 4px #3a3e47; }
+
+/* D-pad: 4 nút tròn xếp hình thoi (giống Joy-Con trái) */
+.arc-dpad, .arc-abxy {
+    position: relative;
+    width: 88px;
+    height: 88px;
+}
+.arc-dpad-btn, .arc-face {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+.arc-dpad--up, .arc-face--x { top: 0; left: 29px; }
+.arc-dpad--down, .arc-face--b { bottom: 0; left: 29px; }
+.arc-dpad--left, .arc-face--y { left: 0; top: 29px; }
+.arc-dpad--right, .arc-face--a { right: 0; top: 29px; }
+.arc-dpad-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+}
+.arc-dpad--up::after { border-bottom-color: #9aa3b2; transform: translateY(-3px); }
+.arc-dpad--down::after { border-top-color: #9aa3b2; transform: translateY(3px); }
+.arc-dpad--left::after { border-right-color: #9aa3b2; transform: translateX(-3px); }
+.arc-dpad--right::after { border-left-color: #9aa3b2; transform: translateX(3px); }
+.arc-face--a { background: #2b2f37; color: #ffd166; }
+.arc-face--b { color: #ff9aa6; }
+
+/* ----- Màn hình ----- */
+.arc-screen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Viền đen quanh màn 16:9 (màn 137 × 77 mm trong thân 173 × 102 mm) — % padding tính theo bề ngang */
+    padding: 7.2% 10.4%;
+    background: #0b0d12;
+    border-top: 1px solid #2a2e37;
+    border-bottom: 1px solid #2a2e37;
+    outline: none;
+}
+.arc-home, .arc-play {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: 8px;
+    background: radial-gradient(ellipse at 50% 0%, #10284f, #061225 70%);
+    overflow: hidden;
+}
+
+.arc-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    font: 600 13px/1 var(--arc-mono);
+    color: #b2e7ff;
+}
+.arc-user {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    color: #04101f;
+    background: conic-gradient(#4d99ff, #b2e7ff, #8b7bff, #4d99ff);
+}
+.arc-topbar-right { display: flex; align-items: center; gap: 10px; }
+.arc-battery {
+    position: relative;
+    width: 24px;
+    height: 12px;
+    border: 2px solid #b2e7ff;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #7cf0c5 70%, transparent 70%) content-box;
+    padding: 1px;
+    box-sizing: border-box;
+}
+.arc-battery::after { content: ""; position: absolute; right: -5px; top: 2px; width: 2px; height: 4px; background: #b2e7ff; }
+
+.arc-tiles {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2.5vw, 22px);
+    padding: 0 16px;
+}
+.arc-tile {
+    position: relative;
+    flex: 0 1 140px; /* 5 ô co đều theo bề ngang màn hình */
+    min-width: 0;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: #061225;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s;
+}
+.arc-tile-icon { width: 100%; height: 100%; display: block; border-radius: 6px; }
+/* Viền chọn nhấp nháy, giống màn hình Home của máy */
+.arc-tile.is-selected { transform: translateY(-4px); }
+.arc-tile.is-selected::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 10px;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 18px var(--accent);
+    animation: arc-ring 1.2s ease-in-out infinite;
+}
+@keyframes arc-ring { 50% { border-color: #ffffff; box-shadow: 0 0 6px var(--accent); } }
+.arc-tile:focus-visible { outline: 2px solid #fff; outline-offset: 8px; }
+
+.arc-home-text { display: grid; justify-items: center; gap: 4px; padding: 6px 16px 10px; text-align: center; }
+.arc-home-title { font: 700 18px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #e8f6ff; }
+.arc-home-info { font-size: 12px; color: #7d97bd; }
+
+.arc-hints, .arc-play-hud {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(120, 190, 255, 0.15);
+    font: 12px/1 var(--arc-mono);
+    color: #9fb6d6;
+}
+.arc-hints b {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    margin-right: 4px;
+    border-radius: 9px;
+    background: #23262d;
+    color: #e8eef7;
+    font-size: 10px;
+}
+
+/* HUD điểm nằm đè mép trên canvas để canvas dùng trọn khung 16:9 */
+.arc-play { position: relative; }
+.arc-play-hud {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-top: 0;
+    background: linear-gradient(rgba(6, 18, 37, 0.85), transparent);
+    color: #7d97bd;
+    pointer-events: none;
+}
+.arc-play-hud strong { color: #ffd166; font-size: 16px; display: inline-block; }
+
+.arc-canvas-wrap { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; }
+.arc-canvas { width: 100%; height: 100%; object-fit: contain; display: block; touch-action: none; cursor: pointer; }
+
+.arc-message[hidden] { display: none; }
+.arc-message {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 8px;
+    background: rgba(6, 18, 37, 0.72);
+    text-align: center;
+    pointer-events: none;
+}
+.arc-message strong { font: 800 26px/1 var(--arc-mono); color: #b2e7ff; letter-spacing: 0.08em; text-shadow: 0 0 16px #4d99ff; }
+.arc-message span { font-size: 13px; color: #9fb6d6; }
+.arc-message em { font: normal 12px/1 var(--arc-mono); color: #ffd166; animation: arc-blink 1s steps(1) infinite; }
+@keyframes arc-blink { 50% { opacity: 0.35; } }
+
+/* ----- Game over: form gửi điểm + nút ----- */
+.arc-message.is-interactive { pointer-events: auto; }
+.arc-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.arc-actions button, .arc-form button, .arc-board-close {
+    padding: 7px 12px;
+    border: 1px solid rgba(120, 190, 255, 0.35);
+    border-radius: 999px;
+    background: rgba(12, 29, 56, 0.9);
+    color: #d5e6ff;
+    font: 600 12px/1 var(--arc-mono);
+    white-space: pre;
+    cursor: pointer;
+}
+.arc-actions button:hover, .arc-form button:hover, .arc-board-close:hover { border-color: #b2e7ff; background: rgba(77, 153, 255, 0.25); }
+.arc-form { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 6px; }
+.arc-form button[type="submit"] { background: #ffd166; border-color: #ffd166; color: #2b1d00; }
+.arc-form button:disabled { opacity: 0.5; cursor: progress; }
+.arc-name {
+    width: 150px;
+    padding: 7px 12px;
+    border: 1px solid rgba(120, 190, 255, 0.35);
+    border-radius: 999px;
+    background: #030a16;
+    color: #e8f6ff;
+    font: 13px/1 var(--arc-mono);
+    outline: none;
+}
+.arc-name:focus { border-color: #ffd166; box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.2); }
+.arc-form-status { flex-basis: 100%; min-height: 1em; font: 11px/1.3 var(--arc-mono); color: #9fb6d6; }
+
+/* ----- Bảng xếp hạng ----- */
+.arc-board[hidden] { display: none; }
+.arc-board {
+    position: absolute;
+    inset: 7.2% 10.4%; /* trùng vùng hiển thị bên trong viền màn hình */
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    background: rgba(6, 18, 37, 0.96);
+    border: 1px solid var(--accent, #4d99ff);
+    box-shadow: inset 0 0 30px rgba(77, 153, 255, 0.15);
+}
+.arc-board-head { display: flex; align-items: center; gap: 8px; font: 700 15px/1 var(--arc-mono); color: #e8f6ff; }
+.arc-board-list {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: auto;
+    display: grid;
+    align-content: start;
+    gap: 3px;
+    font: 13px/1.2 var(--arc-mono);
+}
+.arc-board-list li {
+    display: grid;
+    grid-template-columns: 2.5em 1fr auto;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: #c9dcf5;
+    background: rgba(255, 255, 255, 0.03);
+}
+.arc-board-list li.is-mine { background: color-mix(in srgb, var(--accent) 22%, transparent); color: #fff; outline: 1px solid var(--accent); }
+.arc-board-list .arc-board-empty { display: block; text-align: center; color: #7d97bd; background: none; padding: 20px; }
+.arc-rank { color: #7d97bd; }
+.arc-board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arc-board-score { color: #ffd166; font-weight: 700; }
+.arc-board-close { align-self: center; }
+
+/* ----- Điện thoại: màn hình trên, hai nửa tay cầm bên dưới ----- */
+@media (max-width: 720px) {
+    .popup-panel--arcade .popup-body { padding: 10px; }
+    .arc {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: "screen screen" "left right";
+        aspect-ratio: auto;
+        row-gap: 10px;
+    }
+    /* Điện thoại dọc: màn cao hơn 16:9 để màn Home đủ chỗ; canvas game vẫn giữ 16:9 bên trong */
+    .arc-screen { grid-area: screen; aspect-ratio: 4 / 3; height: auto; padding: 8px; border-radius: 12px; border: 1px solid #2a2e37; }
+    .arc-joycon { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 14px 8px; gap: 10px; }
+    .arc-joycon--left { grid-area: left; border-radius: 28px 10px 10px 28px; }
+    .arc-joycon--right { grid-area: right; border-radius: 10px 28px 28px 10px; }
+    .arc-joycon .arc-stick, .arc-capture { display: none; }
+    .arc-minus, .arc-plus { align-self: center; margin: 0; }
+    .arc-tiles { gap: 8px; padding: 0 8px; }
+    .arc-board { inset: 8px; padding: 10px; }
+    .arc-hints { gap: 10px; flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .arc-tile.is-selected::after, .arc-message em { animation: none; }
+}

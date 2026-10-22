@@ -3,6 +3,7 @@ import "./style.scss";
 import "./View_UI.css";
 import "./Loading.css";
 import "./Popup.css";
+import "./Arcade.css";
 
 import * as THREE from "three";
 import gsap from "gsap";
@@ -20,6 +21,8 @@ import { openPopup } from "./ui/popup.js";
 import { createWorkPopup } from "./ui/popups/work.js";
 import { createAboutPopup } from "./ui/popups/about.js";
 import { createContactPopup } from "./ui/popups/contact.js";
+import { createArcade } from "./ui/arcade/console.js";
+import { setMutedSource } from "./ui/arcade/sfx.js";
 import { getVisitorName, showWelcome } from "./ui/welcome.js";
 import { createBloom } from "./core/bloom.js";
 import { playIntro } from "./core/intro.js";
@@ -84,6 +87,7 @@ const CONFIG = {
         monitor: { label: "My work", popup: "work", view: [1, 0.35, 0.15] },
         casePC: { label: "About me", popup: "about", view: [1, 0.45, 0.8] },
         social: { label: "Contact", popup: "contact", view: [0.25, 0.3, 1] },
+        switch: { label: "Play", popup: "arcade", view: [1, 0.35, 0.2] }, // máy Switch trên kệ dưới màn hình
     },
 };
 // =============================================
@@ -165,6 +169,8 @@ initLoadingScreen(ready, {
 createWorkPopup(WORK, LINKS.portfolioPdf);
 createAboutPopup(PROFILE, ABOUT, LINKS.cv);
 createContactPopup(PROFILE, CONTACT, LINKS);
+createArcade();
+setMutedSource(() => bgMusic?.muted ?? false); // tắt nhạc ở HUD thì mini game cũng im
 const menu = initMenu({
     "#mywork": (item) => openPopup("work", item),
     "#about": (item) => openPopup("about", item),
@@ -191,8 +197,8 @@ async function visit(id, objects) {
 }
 
 ready.then(async () => {
-    const [monitor, casePC, social] = await Promise.all(
-        [tasks.monitor, tasks.casePC, tasks.social].map((t) => t.catch(() => null))
+    const [room, monitor, casePC, social] = await Promise.all(
+        [tasks.room, tasks.monitor, tasks.casePC, tasks.social].map((t) => t.catch(() => null))
     );
     const meshesOf = (root) => {
         const list = [];
@@ -203,14 +209,17 @@ ready.then(async () => {
         monitor: monitor && [monitor.root],
         casePC: casePC && [casePC.root],
         social: social && Object.values(social.meshes),
+        // Máy Switch nằm sẵn trong room_portfolio.glb (màn hình, dock, 2 Joy-Con)
+        switch: room && ["Screen", "Dock", "Left_ctrl", "Right_ctrl"].map((n) => room.getObjectByName(n)).filter(Boolean),
     };
 
     // Logo mạng xã hội đã có hover/click riêng (mở link) nên chỉ gắn hotspot, không đăng ký tương tác
     if (monitor) interactions.register("monitor", meshesOf(monitor.root), () => visit("monitor", objects.monitor));
     if (casePC) interactions.register("casePC", meshesOf(casePC.root), () => visit("casePC", objects.casePC));
+    if (objects.switch?.length) interactions.register("switch", objects.switch, () => visit("switch", objects.switch));
 
     hotspots = createHotspots(camera, Object.entries(objects)
-        .filter(([, objs]) => objs)
+        .filter(([, objs]) => objs?.length)
         .map(([id, objs]) => ({ id, label: CONFIG.spots[id].label, objects: objs, onClick: () => visit(id, objs) })));
     // Rê chuột lên vật thể / hotspot → hotspot và nút menu tương ứng cùng sáng
     const menuLinkOf = (id) => (id ? { work: "#mywork", about: "#about", contact: "#contact" }[CONFIG.spots[id].popup] : null);
