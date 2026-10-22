@@ -5,6 +5,7 @@ import "./Loading.css";
 import "./Popup.css";
 
 import * as THREE from "three";
+import gsap from "gsap";
 
 import { createRenderer } from "./core/renderer.js";
 import { createCamera } from "./core/camera.js";
@@ -21,12 +22,14 @@ import { createAboutPopup } from "./ui/popups/about.js";
 import { createContactPopup } from "./ui/popups/contact.js";
 import { getVisitorName, showWelcome } from "./ui/welcome.js";
 import { createBloom } from "./core/bloom.js";
+import { playIntro } from "./core/intro.js";
 import { createCameraFocus } from "./core/cameraFocus.js";
 import { createInteractions } from "./core/interactions.js";
 import { createAudioLevel } from "./core/audioLevel.js";
 import { createHotspots } from "./ui/hotspots.js";
 import { createHud } from "./ui/hud.js";
 import { createIdleHint } from "./ui/idleHint.js";
+import { prefersReducedMotion } from "./ui/dom.js";
 import { track } from "./core/analytics.js";
 import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES } from "./content.js";
 
@@ -129,7 +132,7 @@ const idleHint = createIdleHint(camera, controls, {
     canStart: () => introDone && !exploring && !document.body.classList.contains("popup-open"),
 });
 
-initLoadingScreen(scene, ready, {
+initLoadingScreen(ready, {
     name: PROFILE.name,
     role: PROFILE.role,
     visitor,
@@ -145,14 +148,17 @@ initLoadingScreen(scene, ready, {
             console.warn("Không bật được Web Audio, LED sẽ không nháy theo nhạc:", err);
         }
         bgMusic.play().catch((err) => console.warn("Autoplay bị chặn:", err));
-    },
-    onIntroDone() {
-        introDone = true;
-        hud.show();
-        idleHint.schedule();
-        hotspots?.show();
-        interactions.setEnabled(true);
-        if (visitor) showWelcome(visitor);
+
+        // Lắp ráp căn phòng; xong thì hiện HUD, hotspot, cho phép tương tác
+        playIntro({ scene, camera, controls, renderer, bloom, reduced: prefersReducedMotion() }).then(() => {
+            introDone = true;
+            document.body.classList.add("is-ready"); // hiện dock menu
+            hud.show();
+            idleHint.schedule();
+            hotspots?.show();
+            interactions.setEnabled(true);
+            if (visitor) showWelcome(visitor);
+        });
     },
 });
 
@@ -218,7 +224,7 @@ ready.then(async () => {
     });
 });
 
-if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus };
+if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
 
 // ===== Render loop =====
 const bloom = CONFIG.bloom.enabled ? createBloom(renderer, CONFIG.bloom) : null;

@@ -1,7 +1,7 @@
 // ui/loading.js
 // Màn hình loading: căn phòng isometric tự vẽ dần theo tiến trình tải thật + log tải từng file
-// → tải xong thì phòng sáng đèn, hiện nút Enter → bấm: bản vẽ phóng to tan vào cảnh 3D,
-// các vật thể bay về vị trí ban đầu (intro).
+// → tải xong thì phòng sáng đèn, hiện nút Enter → bấm: bản vẽ phóng to tan vào cảnh 3D
+// (intro lắp ráp căn phòng nằm ở core/intro.js, main.js gọi trong onEnter).
 import gsap from "gsap";
 import { onLoadProgress, getLoadFiles } from "../core/loader.js";
 import { createIsoRoom } from "./isoRoom.js";
@@ -10,16 +10,14 @@ import { h, prefersReducedMotion } from "./dom.js";
 const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
 
 /**
- * @param {THREE.Scene} scene
  * @param {Promise} ready - resolve khi mọi model đã tải xong (thành công hoặc lỗi)
  * @param {object} opt
  * @param {string} opt.name        - tên hiện từng chữ ở tiêu đề
  * @param {string} opt.role        - dòng phụ dưới tên
  * @param {string|null} opt.visitor - tên công ty từ ?ref= (null nếu không có)
- * @param {() => void} opt.onEnter - gọi khi bấm Enter (vd. phát nhạc)
- * @param {() => void} [opt.onIntroDone] - gọi khi các vật thể đã bay về chỗ
+ * @param {() => void} opt.onEnter - gọi ngay khi bấm Enter (phát nhạc, chạy intro)
  */
-export function initLoadingScreen(scene, ready, { name, role, visitor, onEnter, onIntroDone }) {
+export function initLoadingScreen(ready, { name, role, visitor, onEnter }) {
     const screen = document.querySelector(".loading-screen");
     const art = document.querySelector(".loading-art");
     const button = document.querySelector(".loading-screen-button");
@@ -103,9 +101,7 @@ export function initLoadingScreen(scene, ready, { name, role, visitor, onEnter, 
 
     // ===== Vào phòng: bản vẽ phóng to + mờ dần, cảnh 3D hiện ra phía sau =====
     function enter() {
-        onEnter?.();
-        // Bắt đầu intro ngay: các vật thể bay vào trong lúc màn loading mờ dần
-        playIntro(scene, onIntroDone);
+        onEnter?.(); // intro bắt đầu ngay, chạy song song lúc màn loading mờ dần
         const reduced = prefersReducedMotion();
         gsap.timeline({ onComplete: () => screen.remove() })
             .to(".loading-panel", { opacity: 0, y: 20, duration: 0.4, ease: "power2.in" }, 0)
@@ -116,29 +112,4 @@ export function initLoadingScreen(scene, ready, { name, role, visitor, onEnter, 
 
 function formatSize(bytes) {
     return bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1e3))} KB`;
-}
-
-// Mỗi mesh (trừ background) bắt đầu ở vị trí ngẫu nhiên, scale 0,
-// rồi bay về vị trí + scale gốc với delay ngẫu nhiên.
-function playIntro(scene, onDone) {
-    const DURATION = 1.5;
-    const MAX_DELAY = 0.8;
-    scene.traverse((obj) => {
-        if (!obj.isMesh || obj.userData.skipIntro || obj.name.toLowerCase().includes("background")) return;
-
-        const pos = obj.position.clone();
-        const scale = obj.scale.clone();
-
-        // Toạ độ local của room bị scale 0.01 nên biên độ cần lớn (~±2000)
-        obj.position.set(
-            (Math.random() - 0.8) * 2000,
-            (Math.random() - 0.8) * 2000,
-            (Math.random() - 0.8) * 2000
-        );
-        obj.scale.set(0, 0, 0);
-
-        gsap.to(obj.position, { ...pos, duration: DURATION, delay: Math.random() * MAX_DELAY, ease: "power3.out" });
-        gsap.to(obj.scale, { ...scale, duration: 1.2, delay: Math.random() * MAX_DELAY, ease: "back.out(1.7)" });
-    });
-    gsap.delayedCall(DURATION + MAX_DELAY, () => onDone?.());
 }

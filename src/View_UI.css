@@ -19,8 +19,11 @@
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     font-family: var(--dock-mono);
-    transition: opacity 0.3s;
 }
+
+/* Ẩn trong lúc intro lắp ráp căn phòng, hiện ra khi xong (main.js thêm body.is-ready) */
+body:not(.is-ready) #ui-overlay { opacity: 0; pointer-events: none; transform: translate(16px, -50%); }
+#ui-overlay { transition: opacity 0.5s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
 .dock-title {
     margin: 0 8px 4px;
@@ -270,6 +273,7 @@ body.popup-open .hud { opacity: 0.25; pointer-events: none; }
 
 /* ===== Điện thoại: menu thành thanh tab dưới đáy ===== */
 @media (max-width: 720px) {
+    body:not(.is-ready) #ui-overlay { transform: translateY(100%); } /* trượt lên từ đáy khi intro xong */
     #ui-overlay {
         top: auto;
         right: 0;
@@ -329,7 +333,8 @@ body.popup-open .hotspots { display: none; }
     align-items: center;
     gap: 8px;
     padding: 0;
-    margin: -9px 0 0 -9px; /* tâm chấm nằm đúng điểm neo */
+    /* Chấm nằm phía trên điểm neo (không che vật thể nhỏ như logo), nối xuống bằng một vạch như ghim bản đồ */
+    margin: -37px 0 0 -9px;
     border: 0;
     background: none;
     cursor: pointer;
@@ -338,6 +343,17 @@ body.popup-open .hotspots { display: none; }
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #e8f6ff;
+}
+.hotspot::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 20px;
+    width: 2px;
+    height: 17px;
+    border-radius: 1px;
+    background: linear-gradient(to bottom, #66b3ff, rgba(102, 179, 255, 0));
+    pointer-events: none;
 }
 
 .hotspot-dot {
