@@ -6,6 +6,10 @@ export const PROFILE = {
     name: "Hoàng Trọng Phi",
     role: "Technical Artist",
     email: "", // TODO: điền email liên hệ; để trống thì popup Contact ẩn dòng email
+    // Thẻ tên góc trái (HUD)
+    status: "Available for work", // để trống thì ẩn dòng trạng thái
+    location: "Vietnam",
+    timeZone: "Asia/Ho_Chi_Minh", // giờ địa phương hiển thị trên thẻ tên
 };
 
 export const LINKS = {

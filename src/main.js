@@ -25,6 +25,8 @@ import { createCameraFocus } from "./core/cameraFocus.js";
 import { createInteractions } from "./core/interactions.js";
 import { createAudioLevel } from "./core/audioLevel.js";
 import { createHotspots } from "./ui/hotspots.js";
+import { createHud } from "./ui/hud.js";
+import { createIdleHint } from "./ui/idleHint.js";
 import { track } from "./core/analytics.js";
 import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES } from "./content.js";
 
@@ -73,7 +75,7 @@ const CONFIG = {
             Github: LINKS.github,
         },
     },
-    music: { src: "/music/CuteSimple Piano.ogg", volume: 0.6 },
+    music: { src: "/music/CuteSimple Piano.ogg", title: "Cute Simple Piano", volume: 0.6 },
     // Vật thể bấm được: bay camera tới (view = hướng nhìn từ vật thể tới camera) rồi mở popup
     spots: {
         monitor: { label: "My work", popup: "work", view: [1, 0.35, 0.15] },
@@ -119,6 +121,13 @@ const focus = createCameraFocus(camera, controls);
 const interactions = createInteractions(camera, canvas);
 interactions.setEnabled(false); // bật sau khi intro xong
 let hotspots = null;
+let introDone = false;
+let exploring = false; // camera đang bay tới / đang xem một vật thể
+
+const hud = createHud({ profile: PROFILE, trackTitle: CONFIG.music.title, getMusic: () => bgMusic });
+const idleHint = createIdleHint(camera, controls, {
+    canStart: () => introDone && !exploring && !document.body.classList.contains("popup-open"),
+});
 
 initLoadingScreen(scene, ready, {
     name: PROFILE.name,
@@ -138,6 +147,9 @@ initLoadingScreen(scene, ready, {
         bgMusic.play().catch((err) => console.warn("Autoplay bị chặn:", err));
     },
     onIntroDone() {
+        introDone = true;
+        hud.show();
+        idleHint.schedule();
         hotspots?.show();
         interactions.setEnabled(true);
         if (visitor) showWelcome(visitor);
@@ -147,22 +159,25 @@ initLoadingScreen(scene, ready, {
 createWorkPopup(WORK, LINKS.portfolioPdf);
 createAboutPopup(PROFILE, ABOUT, LINKS.cv);
 createContactPopup(PROFILE, CONTACT, LINKS);
-initMenu({
+const menu = initMenu({
     "#mywork": (item) => openPopup("work", item),
     "#about": (item) => openPopup("about", item),
     "#contact": (item) => openPopup("contact", item),
-}, () => bgMusic);
+});
 
 // Bấm vật thể / hotspot: camera bay tới → mở popup → đóng popup thì camera bay về
 async function visit(id, objects) {
     const spot = CONFIG.spots[id];
     track("click", `spot-${id}`);
+    exploring = true;
+    idleHint.stop();
     interactions.setEnabled(false);
     hotspots.hide();
     await focus.focus(objects, new THREE.Vector3(...spot.view));
     openPopup(spot.popup, null, {
         onClosed: async () => {
             await focus.reset();
+            exploring = false;
             hotspots.show();
             interactions.setEnabled(true);
         },
@@ -191,8 +206,16 @@ ready.then(async () => {
     hotspots = createHotspots(camera, Object.entries(objects)
         .filter(([, objs]) => objs)
         .map(([id, objs]) => ({ id, label: CONFIG.spots[id].label, objects: objs, onClick: () => visit(id, objs) })));
-    interactions.onHover((id) => hotspots.setActive(id));
-    hotspots.onHover((id, on) => interactions.highlight(id, on));
+    // Rê chuột lên vật thể / hotspot → hotspot và nút menu tương ứng cùng sáng
+    const menuLinkOf = (id) => (id ? { work: "#mywork", about: "#about", contact: "#contact" }[CONFIG.spots[id].popup] : null);
+    interactions.onHover((id) => {
+        hotspots.setActive(id);
+        menu.setActive(menuLinkOf(id));
+    });
+    hotspots.onHover((id, on) => {
+        interactions.highlight(id, on);
+        menu.setActive(on ? menuLinkOf(id) : null); // kệ mạng xã hội không có tương tác 3D riêng
+    });
 });
 
 if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus };
@@ -211,6 +234,7 @@ renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
     bloom?.render(scene, camera);
     hotspots?.update();
+    hud.updateBands(audioLevel?.getBands());
 });
 
 // ===== Resize =====

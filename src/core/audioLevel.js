@@ -4,7 +4,9 @@
 
 /**
  * @param {HTMLAudioElement} audio
- * @returns {{ getLevel: () => number }} getLevel trả về 0 → 1, gọi mỗi frame
+ * @returns {{ getLevel: () => number, getBands: () => number[] }}
+ *   getLevel: độ lớn chung 0 → 1, gọi mỗi frame (cập nhật luôn các dải)
+ *   getBands: 4 dải tần 0 → 1 (trầm → cao) cho thanh equalizer, đọc sau getLevel
  */
 export function createAudioLevel(audio) {
     const ctx = new AudioContext();
@@ -19,9 +21,29 @@ export function createAudioLevel(audio) {
     let peak = 0.05;
     let level = 0;
 
+    // Các dải tần cho equalizer (chỉ số bin, mỗi bin ≈ 170 Hz); mỗi dải tự cân bằng theo đỉnh riêng
+    const BAND_RANGES = [[1, 3], [3, 8], [8, 18], [18, 40]];
+    const bands = BAND_RANGES.map(() => 0);
+    const bandPeaks = BAND_RANGES.map(() => 0.05);
+
+    function updateBands() {
+        BAND_RANGES.forEach(([from, to], i) => {
+            let sum = 0;
+            for (let b = from; b < to; b++) sum += data[b];
+            const value = sum / (to - from) / 255;
+            bandPeaks[i] = Math.max(value, bandPeaks[i] * 0.995, 0.05);
+            const target = Math.min(1, (value / bandPeaks[i]) ** 2);
+            bands[i] += (target - bands[i]) * (target > bands[i] ? 0.6 : 0.15);
+        });
+    }
+
     function getLevel() {
-        if (audio.paused || audio.muted) return (level *= 0.9);
+        if (audio.paused || audio.muted) {
+            bands.forEach((v, i) => (bands[i] = v * 0.9));
+            return (level *= 0.9);
+        }
         analyser.getByteFrequencyData(data);
+        updateBands();
 
         // Dải trầm–trung (khoảng 170 Hz → 4 kHz): nhạc piano ít bass nên lấy rộng
         let sum = 0;
@@ -35,5 +57,5 @@ export function createAudioLevel(audio) {
         return level;
     }
 
-    return { getLevel };
+    return { getLevel, getBands: () => bands };
 }

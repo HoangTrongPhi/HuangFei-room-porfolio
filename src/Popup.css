@@ -388,8 +388,15 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 }
 .welcome-close:hover { color: var(--pp-soft); }
 
+/* Không đè lên thẻ tên ở góc trái khi màn hình hẹp */
+@media (max-width: 1100px) {
+    .welcome { top: 96px; }
+}
+
 /* ===== Màn hình nhỏ ===== */
 @media (max-width: 720px) {
+    .welcome { top: 72px; }
+    .toast-root { bottom: calc(84px + env(safe-area-inset-bottom)); }
     .popup { padding: 8px; }
     .popup-panel { max-height: calc(100dvh - 16px); }
     .popup-body { padding: 14px; }

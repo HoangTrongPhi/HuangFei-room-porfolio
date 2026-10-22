@@ -30,14 +30,29 @@
   </div>
 </div>
 
-<!-- Overlay UI -->
-<nav id="ui-overlay">
-
-  <button type="button" id="sound-toggle" class="menu-item" aria-label="Toggle music">🔊</button>
-
-  <button type="button" class="menu-item" data-link="#mywork">MY WORK</button>
-  <button type="button" class="menu-item" data-link="#contact">CONTACT</button>
-  <button type="button" class="menu-item" data-link="#about">ABOUT</button>
+<!-- Overlay UI: dock kính bên phải (desktop) / thanh tab dưới đáy (điện thoại). Nhạc nằm ở widget HUD (src/ui/hud.js).
+     data-key = phím tắt bàn phím -->
+<nav id="ui-overlay" aria-label="Main">
+  <p class="dock-title" aria-hidden="true">// navigate</p>
+  <span class="dock-indicator" aria-hidden="true"></span>
+  <button type="button" class="menu-item" data-link="#mywork" data-key="1" aria-keyshortcuts="1">
+    <span class="menu-index" aria-hidden="true">01</span>
+    <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="menu-label">MY WORK</span>
+    <kbd class="menu-key" aria-hidden="true">1</kbd>
+  </button>
+  <button type="button" class="menu-item" data-link="#contact" data-key="2" aria-keyshortcuts="2">
+    <span class="menu-index" aria-hidden="true">02</span>
+    <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
+    <span class="menu-label">CONTACT</span>
+    <kbd class="menu-key" aria-hidden="true">2</kbd>
+  </button>
+  <button type="button" class="menu-item" data-link="#about" data-key="3" aria-keyshortcuts="3">
+    <span class="menu-index" aria-hidden="true">03</span>
+    <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+    <span class="menu-label">ABOUT</span>
+    <kbd class="menu-key" aria-hidden="true">3</kbd>
+  </button>
 </nav>
 
 
