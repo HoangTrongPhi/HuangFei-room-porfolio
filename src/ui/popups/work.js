@@ -63,6 +63,7 @@ export function createWorkPopup(projects, portfolioUrl) {
                 : h("div", { class: "work-detail-media work-placeholder" }, project.title.slice(0, 1)),
             h("div", { class: "work-detail-info" },
                 h("h3", {}, project.title),
+                project.meta && h("span", { class: "work-meta" }, project.meta),
                 h("div", { class: "work-tags" }, project.tags.map((t) => h("span", { class: "tag" }, t))),
                 h("p", {}, project.description),
                 project.link && h("button", {
@@ -134,6 +135,7 @@ function createCard(project, onSelect) {
         h("div", { class: "work-media" }, video ?? h("div", { class: "work-placeholder" }, project.title.slice(0, 1))),
         h("div", { class: "work-info" },
             h("h3", {}, project.title),
+            project.meta && h("span", { class: "work-meta" }, project.meta),
             h("div", { class: "work-tags" }, project.tags.map((t) => h("span", { class: "tag" }, t))),
         ),
         h("span", { class: "work-shine", "aria-hidden": "true" }),

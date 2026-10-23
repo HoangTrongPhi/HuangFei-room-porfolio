@@ -207,6 +207,7 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 .work-info { padding: 12px 14px 14px; display: grid; gap: 8px; }
 .work-info h3, .work-detail-info h3 { margin: 0; font-size: 16px; color: var(--pp-soft); }
 .work-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.work-meta { margin-top: -4px; font: 11px/1.4 var(--pp-mono); color: var(--pp-muted); }
 
 .work-footer { margin-top: 20px; display: flex; justify-content: center; }
 
@@ -349,8 +350,37 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     border-left: 2px solid var(--pp-line);
     font-size: 13px;
 }
-.timeline li div { display: grid; }
+.timeline li div { display: grid; gap: 2px; }
 .timeline-year { font: 600 12px/1.6 var(--pp-mono); color: var(--pp-accent); }
+.timeline-period { font: 11px/1.6 var(--pp-mono); color: var(--pp-muted); opacity: 0.8; }
+.timeline-projects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.timeline-points { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 2px; color: var(--pp-text); font-size: 12.5px; line-height: 1.5; }
+.timeline-points li { display: list-item; padding: 0; border: 0; }
+.timeline-points li::marker { color: var(--pp-accent); }
+.timeline--edu li { grid-template-columns: 96px 1fr; }
+
+/* Đang làm ở đâu + số liệu nổi bật (cột trái) */
+.about-now {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 6px;
+    padding: 4px 10px;
+    border: 1px solid rgba(75, 227, 164, 0.4);
+    border-radius: 999px;
+    font: 11px/1.4 var(--pp-mono);
+    color: #4be3a4;
+}
+.about-now i { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #4be3a4; box-shadow: 0 0 8px #4be3a4; animation: pp-blink 1.6s steps(1) infinite; }
+.about-highlights { list-style: none; margin: 0 0 10px; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.about-highlights li { display: grid; gap: 2px; padding: 8px 4px; border: 1px solid var(--pp-line); border-radius: 8px; background: rgba(77, 153, 255, 0.06); }
+.about-highlights strong { font: 700 20px/1 var(--pp-mono); color: var(--pp-soft); text-shadow: 0 0 12px rgba(77, 153, 255, 0.6); }
+.about-highlights span { font: 10px/1 var(--pp-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--pp-muted); }
+
+/* Bộ công cụ theo nhóm */
+.toolkit { margin: 0; display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; align-items: baseline; }
+.toolkit dt { font: 600 11px/1.8 var(--pp-mono); color: var(--pp-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.toolkit dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ===== CONTACT ===== */
 .popup-panel--contact { width: min(560px, 100%); }
@@ -482,6 +512,8 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     .popup-body { padding: 14px; }
     .about { grid-template-columns: 1fr; }
     .skills li { grid-template-columns: 100px 1fr 40px; }
+    .toolkit { grid-template-columns: 1fr; gap: 4px; }
+    .toolkit dd { margin-bottom: 6px; }
     .work-detail { grid-template-columns: 1fr; }
     .work-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
     .hobby-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

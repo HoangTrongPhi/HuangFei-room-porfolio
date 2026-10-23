@@ -4,7 +4,7 @@
 
 export const PROFILE = {
     name: "Hoàng Trọng Phi",
-    role: "Technical Artist",
+    role: "3D Technical Artist",
     email: "", // TODO: điền email liên hệ; để trống thì popup Contact ẩn dòng email
     // Thẻ tên góc trái (HUD)
     status: "Available for work", // để trống thì ẩn dòng trạng thái
@@ -34,65 +34,140 @@ export const LINKS = {
  * id    : chữ không dấu / số / dấu - (dùng làm tên sự kiện click trong admin: work-<id>)
  * video : file trong /public (tuỳ chọn) — rê chuột vào thẻ sẽ phát
  * link  : trang chi tiết bên ngoài (tuỳ chọn), vd. bài trên ArtStation
+ * meta  : dòng phụ "năm · studio" (tuỳ chọn)
+ * Chỉ dự án có video mới lên hologram trong phòng.
  */
 export const WORK = [
-    // TODO: thay tên, mô tả, tag và link của từng dự án
+    // Dự án lấy từ PDF_files/CV_TechnicalArtist.pdf
+    {
+        id: "lies-of-p",
+        title: "Lies of P",
+        meta: "2021 – 2023 · Neowiz / Round8 Studio",
+        tags: ["Unreal", "Environment", "Optimization"],
+        description: "AAA soulslike. Modeled props and environments, built custom materials and procedural textures in UE5, and optimized memory and draw calls — delivering QC-ready assets on milestone deadlines.",
+        link: "https://www.youtube.com/watch?v=R5TUYKAzGZs",
+    },
+    {
+        id: "caliverse",
+        title: "Caliverse",
+        meta: "2021 – 2023 · Lotte",
+        tags: ["Unreal", "VR/XR", "Optimization"],
+        description: "Metaverse for VR/XR. Modular building assets, procedural foliage and performance optimization to hold frame rate on headsets.",
+        link: "https://www.youtube.com/@Caliverse_io",
+    },
+    {
+        id: "national-museum-singapore",
+        title: "National Museum Singapore",
+        meta: "2025 – 2026 · DreamChasers Interactive",
+        tags: ["Environment", "Optimization"],
+        description: "Created and optimized assets for the museum experience, handled the material graphs and set up the levels.",
+    },
+    {
+        id: "net-runner",
+        title: "Net Runner",
+        meta: "2026 · MageTechCorp",
+        tags: ["Meta Horizon", "VR/XR"],
+        description: "Game built with Meta Horizon Create for Meta Horizon Worlds.",
+    },
+    {
+        id: "oblique-beat-saber",
+        title: "Oblique Beat Saber",
+        meta: "2026 · MageTechCorp",
+        tags: ["Meta Horizon", "VR/XR"],
+        description: "Rhythm game built with Meta Horizon Create for Meta Horizon Worlds.",
+    },
+    {
+        id: "revenge-slots",
+        title: "Revenge Game Slots",
+        meta: "2024 – 2025 · Fetch",
+        tags: ["Cocos", "Optimization"],
+        description: "In-house slot games. Optimized 2D/3D animation and VFX assets for memory and draw calls, and integrated them in Cocos Creator.",
+        link: "https://lobby.dev.revenge-games.com/?oc=demo&t=bjaswml5ee18hes1n3wqa0r7&theme=dark&l=en",
+    },
+    {
+        id: "space-elvis",
+        title: "Seoul City Wall Restoration",
+        meta: "2021 – 2023 · Space Elvis",
+        tags: ["Unreal", "Environment"],
+        description: "Historical heritage project. Modeled history props and supported the team as Technical Artist in Unreal.",
+        link: "https://www.elviss.co/portfolio-all/seoul-city-wall-restoration-project",
+    },
+    {
+        id: "skt-ifland",
+        title: "SKT ifland",
+        meta: "2021 – 2023 · SK Telecom",
+        tags: ["Unity", "Environment"],
+        description: "Metaverse platform. Technical Artist in Unity and environment modeling support.",
+    },
+    {
+        id: "kidmo",
+        title: "Kidmo",
+        meta: "2021 – 2023 · One Universe VN",
+        tags: ["Unity"],
+        description: "Technical Artist in Unity; R&D on a Stable Diffusion 1.5 asset pipeline.",
+    },
     {
         id: "room-portfolio",
         title: "3D Room Portfolio",
-        tags: ["Modeling", "Lighting", "Web 3D"],
+        meta: "2025 · Personal",
+        tags: ["Web 3D"],
         description: "This interactive room — modeled in Maya, baked lighting, rendered in the browser with Three.js.",
         video: "/media/monitor_1.mp4",
         link: LINKS.github,
     },
-    {
-        id: "project-02",
-        title: "Project 02",
-        tags: ["Lighting"],
-        description: "Replace with a short description of this project in src/content.js.",
-        video: "/media/monitor_2.mp4",
-        link: LINKS.artstation,
-    },
-    {
-        id: "project-03",
-        title: "Project 03",
-        tags: ["Modeling"],
-        description: "Replace with a short description of this project in src/content.js.",
-        video: "/media/monitor_3.mp4",
-        link: LINKS.artstation,
-    },
-    {
-        id: "project-04",
-        title: "Project 04",
-        tags: ["Animation"],
-        description: "Replace with a short description of this project in src/content.js.",
-        video: "/media/itachi.mp4",
-        link: LINKS.youtube,
-    },
 ];
 
+// Nội dung lấy từ PDF_files/CV_TechnicalArtist.pdf
 export const ABOUT = {
-    // TODO: viết lại phần giới thiệu, kỹ năng và kinh nghiệm thật
-    bio: "Hi, I'm Phi — a 3D artist who loves building cozy, detailed spaces.\n\nI work across modeling, texturing and lighting, and I enjoy bringing my scenes to the web as interactive experiences like this room.",
-    skills: [
-        { name: "Maya", level: 85 },
-        { name: "Marmoset Toolbag", level: 75 },
-        { name: "Blender", level: 70 },
-        { name: "Three.js", level: 60 },
+    bio: "Hi, I'm Phi — a 3D Technical Artist who bridges art and engineering.\n\n5+ years shipping assets, shaders and tools for AAA (Lies of P), VR/XR (Caliverse), slot games and Meta Horizon Worlds — making things look great and run fast.",
+    // Đang làm ở đâu — hiện dưới chức danh (để trống thì ẩn)
+    now: "MageTechCorp · Meta Horizon Worlds",
+    // Số liệu nổi bật ở cột trái
+    highlights: [
+        { value: "5+", label: "Years" },
+        { value: "6", label: "Studios" },
+        { value: "3", label: "Engines" },
     ],
+    // Thanh kỹ năng chính (0 → 100, tự đánh giá)
+    skills: [
+        { name: "Unreal Engine", level: 90 },
+        { name: "Maya", level: 85 },
+        { name: "Substance", level: 85 },
+        { name: "Blender", level: 80 },
+        { name: "Python / C++", level: 78 },
+        { name: "Unity", level: 72 },
+    ],
+    // Bộ công cụ chia theo nhóm (dạng tag)
+    toolkit: [
+        { group: "Tech Art", items: ["Material / Shader Graph", "HLSL · GLSL", "PCG", "HLOD · Foliage · Landscape", "Trimsheet", "Lumen · Path Tracing", "Niagara", "Anim Blueprint"] },
+        { group: "3D DCC", items: ["Maya", "Blender", "ZBrush", "Substance Painter", "Substance Designer", "Marmoset", "SpeedTree", "Gaea", "EmberGen", "Cascadeur"] },
+        { group: "Engines", items: ["Unreal Engine", "Unity", "Cocos Creator", "Meta Horizon"] },
+        { group: "Code & Pipeline", items: ["Python", "C++", "C#", "Maya / Blender tools", "Three.js", "Git · Perforce", "Stable Diffusion · ComfyUI"] },
+        { group: "2D & Video", items: ["Photoshop", "Illustrator", "Spine 2D", "DaVinci Resolve", "After Effects"] },
+    ],
+    // Kinh nghiệm, mới nhất ở trên. projects / points tuỳ chọn
     timeline: [
-        { year: "2025", title: "3D Room Portfolio", place: "Personal project" },
-        { year: "20XX", title: "Your role", place: "Company / school" },
+        { year: "2026", period: "04/2026 — now", title: "MageTechCorp (ABH Tech)", place: "Meta Horizon Worlds developer", projects: ["Net Runner", "Oblique Beat Saber"] },
+        { year: "2025", period: "12/2025 — 04/2026", title: "DreamChasers Interactive", place: "National Museum Singapore", points: ["Created & optimized assets", "Material graphs and level setup"] },
+        { year: "2024", period: "10/2024 — 10/2025", title: "Fetch · Revenge Game", place: "Technical Artist — in-house slot games", points: ["Optimized 2D/3D animation & VFX assets", "Memory and draw-call optimization", "Asset integration in Cocos Creator"] },
+        { year: "2024", period: "02 — 08/2024", title: "Line Century", place: "Freelance (Upwork) — UE5 cinematic content", points: ["YouTube series built with UE5, Mixamo, DaVinci Resolve"] },
+        { year: "2021", period: "11/2021 — 11/2023", title: "One Universe VN", place: "Technical Artist (outsource)", projects: ["Lies of P", "Caliverse", "Space Elvis", "SKT ifland", "Kidmo"], points: ["AAA props & environments, custom UE5 materials (Neowiz / Round8)", "Modular buildings, procedural foliage, VR/XR optimization (Lotte)", "R&D Stable Diffusion pipeline in Unity"] },
+        { year: "2021", period: "03 — 10/2021", title: "Sparx* Virtuos", place: "Intern / Trainee 3D Artist", points: ["AAA props & environments, procedural textures in UE4.26"] },
+    ],
+    education: [
+        { year: "2023 — 2026", title: "University of Technology", place: "Technical Field" },
+        { year: "2020 — 2021", title: "VTC Academy", place: "Full-Stack 3D Modeling for Games" },
+        { year: "2016 — 2018", title: "HCMC Fine Arts College", place: "Visual Art Foundation" },
     ],
     // Bảng chỉ số hình lục giác kiểu game (0 → 100), thứ tự theo chiều kim đồng hồ từ đỉnh trên cùng
     stats: [
-        // TODO: chỉnh lại chỉ số thật
-        { label: "Problem Solve", value: 82 },
-        { label: "RnD", value: 78 },
-        { label: "Programming", value: 66 },
-        { label: "Design", value: 80 },
-        { label: "Social", value: 70 },
-        { label: "Creative", value: 88 },
+        // TODO: chỉnh lại theo cảm nhận của bạn
+        { label: "Modeling", value: 86 },
+        { label: "Shader", value: 84 },
+        { label: "Optimize", value: 88 },
+        { label: "Code", value: 76 },
+        { label: "Pipeline", value: 80 },
+        { label: "R&D", value: 82 },
     ],
 };
 
