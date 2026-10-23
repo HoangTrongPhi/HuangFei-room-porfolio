@@ -191,8 +191,9 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 .work-card:hover .work-shine { opacity: 1; }
 
 .work-media { aspect-ratio: 16 / 10; background: #030a16; overflow: hidden; }
-.work-media video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
-.work-card:hover .work-media video { transform: scale(1.06); }
+.work-media video, .work-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
+.work-card:hover .work-media video, .work-card:hover .work-media img { transform: scale(1.06); }
+.work-cover { object-fit: cover; }
 
 .work-placeholder {
     width: 100%;
@@ -549,7 +550,6 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
 .radar-ring--outer { stroke: rgba(120, 190, 255, 0.45); stroke-width: 1.2; }
 .radar-axis { stroke: rgba(120, 190, 255, 0.18); stroke-width: 0.8; }
 .radar-area {
-    fill: url(#radar-fill);
     stroke: #66e0ff;
     stroke-width: 1.6;
     stroke-linejoin: round;
@@ -599,3 +599,99 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     .px-grid { gap: 8px; }
     .px-preview { width: 44px; height: 44px; }
 }
+
+/* ----- ABOUT: tab chuyển bảng lục giác ----- */
+.stat-tabs { display: flex; gap: 4px; margin: 6px 0 2px; padding: 3px; border: 1px solid var(--pp-line); border-radius: 999px; }
+.stat-tab {
+    flex: 1;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--pp-muted);
+    font: 600 11px/1.2 var(--pp-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.stat-tab:hover { color: var(--pp-soft); }
+.stat-tab.is-active { background: linear-gradient(90deg, #66e0ff, #a07bff); color: #04101f; }
+
+/* ----- ABOUT: cây kỹ năng (src/ui/skillTree.js) ----- */
+.tree { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
+.tree-branch { --branch: var(--pp-accent); display: grid; justify-items: center; align-content: start; gap: 8px; min-width: 0; }
+.tree-branch-name {
+    padding: 2px 8px;
+    border: 1px solid color-mix(in srgb, var(--branch) 60%, transparent);
+    border-radius: 999px;
+    font: 700 10px/1.4 var(--pp-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--branch);
+    white-space: nowrap;
+}
+.tree-nodes { --link: 1; position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; justify-items: center; width: 100%; }
+/* Dây nối giữa các node — --link (0 → 1) chạy từ trên xuống khi mở popup */
+.tree-nodes::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 30px;
+    left: 50%;
+    width: 2px;
+    translate: -50% 0;
+    background: linear-gradient(to bottom, var(--branch), color-mix(in srgb, var(--branch) 25%, transparent));
+    box-shadow: 0 0 8px var(--branch);
+    transform: scaleY(var(--link));
+    transform-origin: top;
+}
+.tree-node { position: relative; display: grid; justify-items: center; gap: 3px; width: 100%; outline: none; cursor: default; }
+.tree-hex {
+    position: relative;
+    width: 30px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: color-mix(in srgb, var(--branch) 30%, #06122a);
+    color: #e8f6ff;
+    font: 700 12px/1 var(--pp-mono);
+    transition: transform 0.2s, filter 0.2s;
+}
+.tree-node--max .tree-hex { background: linear-gradient(160deg, #ffe08a, var(--branch)); color: #04101f; filter: drop-shadow(0 0 6px var(--branch)); }
+.tree-node--locked .tree-hex { background: #1a2436; color: var(--pp-muted); }
+.tree-node:hover .tree-hex, .tree-node:focus-visible .tree-hex { transform: scale(1.15); filter: drop-shadow(0 0 10px var(--branch)) brightness(1.2); }
+.tree-label { max-width: 100%; font: 600 9.5px/1.2 var(--pp-mono); color: var(--pp-text); text-align: center; overflow-wrap: anywhere; }
+.tree-node--locked .tree-label { color: var(--pp-muted); }
+.tree-pips { display: flex; gap: 2px; }
+.tree-pips i { width: 5px; height: 3px; border-radius: 1px; background: rgba(255, 255, 255, 0.12); }
+.tree-pips i.is-on { background: var(--branch); box-shadow: 0 0 4px var(--branch); }
+.tree-node--max .tree-pips i.is-on { background: #ffd166; box-shadow: 0 0 4px #ffd166; }
+.tree-tip {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    z-index: 2;
+    width: max-content;
+    max-width: 160px;
+    padding: 6px 8px;
+    translate: -50% 4px;
+    border: 1px solid color-mix(in srgb, var(--branch) 60%, transparent);
+    border-radius: 6px;
+    background: rgba(4, 12, 26, 0.95);
+    color: var(--pp-text);
+    font: 11px/1.4 var(--pp-sans);
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s, translate 0.15s;
+}
+.tree-node:hover .tree-tip, .tree-node:focus-visible .tree-tip { opacity: 1; translate: -50% 0; }
+.about-tree { overflow: visible; }
+/* Nhánh ngoài cùng: tooltip bám mép trong, không bị cắt */
+.tree-branch:first-child .tree-tip { left: 0; translate: 0 4px; }
+.tree-branch:last-child .tree-tip { left: auto; right: 0; translate: 0 4px; }
+.tree-branch:first-child .tree-node:is(:hover, :focus-visible) .tree-tip,
+.tree-branch:last-child .tree-node:is(:hover, :focus-visible) .tree-tip { translate: 0 0; }
+.tree-label, .tree-pips { position: relative; padding: 1px 3px; border-radius: 3px; background: #0b1b34; }

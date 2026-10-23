@@ -5,6 +5,7 @@ import gsap from "gsap";
 
 const NS = "http://www.w3.org/2000/svg";
 const R = 70; // bán kính lục giác ngoài cùng (đơn vị viewBox)
+let radarCount = 0; // id gradient riêng cho từng bảng (có thể có nhiều bảng cùng lúc)
 
 const svgEl = (tag, attrs = {}) => {
     const el = document.createElementNS(NS, tag);
@@ -29,7 +30,8 @@ export function createStatRadar(stats) {
     svg.append(title);
 
     const defs = svgEl("defs");
-    const grad = svgEl("linearGradient", { id: "radar-fill", x1: "0", y1: "0", x2: "1", y2: "1" });
+    const gradId = `radar-fill-${++radarCount}`;
+    const grad = svgEl("linearGradient", { id: gradId, x1: "0", y1: "0", x2: "1", y2: "1" });
     grad.append(svgEl("stop", { offset: "0%", "stop-color": "#66e0ff", "stop-opacity": "0.55" }));
     grad.append(svgEl("stop", { offset: "100%", "stop-color": "#a07bff", "stop-opacity": "0.45" }));
     defs.append(grad);
@@ -43,7 +45,7 @@ export function createStatRadar(stats) {
     });
 
     // Vùng chỉ số + chấm đỉnh
-    const area = svgEl("polygon", { class: "radar-area", points: ring(0) });
+    const area = svgEl("polygon", { class: "radar-area", points: ring(0), fill: `url(#${gradId})` });
     svg.append(area);
     const dots = stats.map(() => {
         const c = svgEl("circle", { r: 3, class: "radar-dot" });

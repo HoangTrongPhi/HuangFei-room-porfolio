@@ -59,8 +59,10 @@ export function createWorkPopup(projects, portfolioUrl) {
         detailView.replaceChildren(
             h("button", { class: "btn btn-ghost work-back", type: "button", onClick: showGrid }, "← Back"),
             project.video
-                ? h("video", { class: "work-detail-media", src: project.video, controls: true, autoplay: true, muted: true, loop: true, playsinline: true })
-                : h("div", { class: "work-detail-media work-placeholder" }, project.title.slice(0, 1)),
+                ? h("video", { class: "work-detail-media", src: project.video, poster: project.cover, controls: true, autoplay: true, muted: true, loop: true, playsinline: true })
+                : project.cover
+                    ? h("img", { class: "work-detail-media work-cover", src: project.cover, alt: project.title })
+                    : h("div", { class: "work-detail-media work-placeholder" }, project.title.slice(0, 1)),
             h("div", { class: "work-detail-info" },
                 h("h3", {}, project.title),
                 project.meta && h("span", { class: "work-meta" }, project.meta),
@@ -126,13 +128,14 @@ export function createWorkPopup(projects, portfolioUrl) {
 
 function createCard(project, onSelect) {
     const video = project.video
-        // #t=0.5: hiện khung hình ở giây 0.5 làm ảnh bìa
-        ? h("video", { src: `${project.video}#t=0.5`, muted: true, loop: true, playsinline: true, preload: "metadata" })
+        // Có ảnh bìa thì dùng làm poster, không thì #t=0.5: hiện khung hình ở giây 0.5 làm ảnh bìa
+        ? h("video", { src: project.cover ? project.video : `${project.video}#t=0.5`, poster: project.cover, muted: true, loop: true, playsinline: true, preload: "metadata" })
         : null;
     if (video) video.muted = true;
+    const cover = !video && project.cover ? h("img", { src: project.cover, alt: "", loading: "lazy", decoding: "async" }) : null;
 
     const el = h("button", { class: "work-card", type: "button", onClick: onSelect },
-        h("div", { class: "work-media" }, video ?? h("div", { class: "work-placeholder" }, project.title.slice(0, 1))),
+        h("div", { class: "work-media" }, video ?? cover ?? h("div", { class: "work-placeholder" }, project.title.slice(0, 1))),
         h("div", { class: "work-info" },
             h("h3", {}, project.title),
             project.meta && h("span", { class: "work-meta" }, project.meta),
@@ -157,7 +160,7 @@ function createCard(project, onSelect) {
     function stop() {
         el.style.removeProperty("--rx");
         el.style.removeProperty("--ry");
-        if (video) { video.pause(); video.currentTime = 0.5; }
+        if (video) { video.pause(); video.currentTime = project.cover ? 0 : 0.5; }
     }
 
     return { el, project, stop };

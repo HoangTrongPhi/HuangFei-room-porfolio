@@ -1,11 +1,13 @@
 // ui/popups/about.js
 // Popup ABOUT: dạng cửa sổ hệ điều hành (kéo được bằng thanh tiêu đề),
-// phần giới thiệu tự gõ chữ, thanh kỹ năng chạy dần, timeline kinh nghiệm, bảng chỉ số lục giác kiểu game.
+// phần giới thiệu tự gõ chữ, thanh kỹ năng chạy dần, timeline kinh nghiệm,
+// bảng chỉ số lục giác kiểu game (nhiều bảng chuyển bằng tab) + cây kỹ năng.
 import gsap from "gsap";
 import { h, openExternal, prefersReducedMotion } from "../dom.js";
 import { createPopup } from "../popup.js";
 import { track } from "../../core/analytics.js";
 import { createStatRadar } from "../statRadar.js";
+import { createSkillTree } from "../skillTree.js";
 
 /**
  * @param {{name:string, role:string}} profile
@@ -19,8 +21,28 @@ export function createAboutPopup(profile, about, cvUrl) {
 
     const bio = h("p", { class: "about-bio typing" });
     const bars = about.skills.map((s) => h("span", { class: "skill-fill", "data-level": s.level }));
-    const radar = about.stats?.length ? createStatRadar(about.stats) : null;
-    const average = radar ? Math.round(about.stats.reduce((sum, s) => sum + s.value, 0) / about.stats.length) : 0;
+    // Các bảng lục giác (stats, stats_2...) — nhiều bảng thì hiện tab để chuyển
+    const statSets = [about.stats, about.stats_2].filter((s) => s?.length).map((stats, i) => ({
+        name: about.statTabs?.[i] ?? `Set ${i + 1}`,
+        radar: createStatRadar(stats),
+        average: Math.round(stats.reduce((sum, s) => sum + s.value, 0) / stats.length),
+    }));
+    const ovr = h("span", { class: "about-ovr" });
+    const tabs = statSets.length > 1 ? statSets.map((set, i) => h("button", {
+        class: "stat-tab",
+        type: "button",
+        role: "tab",
+        onClick: () => showStats(i),
+    }, set.name)) : [];
+    let activeStats = 0;
+    function showStats(i, instant = prefersReducedMotion()) {
+        activeStats = i;
+        statSets.forEach((set, j) => { set.radar.el.style.display = j === i ? "" : "none"; });
+        tabs.forEach((tab, j) => { tab.classList.toggle("is-active", j === i); tab.setAttribute("aria-selected", String(j === i)); });
+        ovr.textContent = `OVR ${statSets[i].average}`;
+        statSets[i].radar.play(instant);
+    }
+    const tree = about.skillTree?.length ? createSkillTree(about.skillTree) : null;
 
     const body = h("div", { class: "about" },
         h("aside", { class: "about-side", "data-stagger": true },
@@ -35,9 +57,14 @@ export function createAboutPopup(profile, about, cvUrl) {
                 type: "button",
                 onClick: () => { track("click", "cv"); openExternal(cvUrl); },
             }, "View CV ↗"),
-            radar && h("div", { class: "about-stats" },
-                h("h4", {}, "> stats", h("span", { class: "about-ovr" }, `OVR ${average}`)),
-                radar.el,
+            statSets.length && h("div", { class: "about-stats" },
+                h("h4", {}, "> stats", ovr),
+                tabs.length && h("div", { class: "stat-tabs", role: "tablist" }, tabs),
+                statSets.map((set) => set.radar.el),
+            ),
+            tree && h("div", { class: "about-stats about-tree" },
+                h("h4", {}, "> skill tree", h("span", { class: "about-ovr" }, `${tree.points} SP`)),
+                tree.el,
             ),
         ),
         h("div", { class: "about-main" },
@@ -104,7 +131,8 @@ export function createAboutPopup(profile, about, cvUrl) {
                 onUpdate: () => { bio.textContent = about.bio.slice(0, Math.round(state.n)); },
                 onComplete: () => bio.classList.remove("typing"),
             });
-            radar?.play(instant);
+            if (statSets.length) showStats(activeStats, instant);
+            tree?.play(instant);
             gsap.fromTo(bars, { width: "0%" }, {
                 width: (i, el) => `${el.dataset.level}%`,
                 duration: instant ? 0 : 1,

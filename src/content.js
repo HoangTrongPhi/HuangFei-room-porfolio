@@ -32,8 +32,9 @@ export const LINKS = {
 /**
  * Dự án trong popup MY WORK.
  * id    : chữ không dấu / số / dấu - (dùng làm tên sự kiện click trong admin: work-<id>)
+ * cover : ảnh bìa trong /public (tuỳ chọn) — media gốc ở MyWork/, bản dùng trên web ở public/media/work/
  * video : file trong /public (tuỳ chọn) — rê chuột vào thẻ sẽ phát
- * link  : trang chi tiết bên ngoài (tuỳ chọn), vd. bài trên ArtStation
+ * link  : trang chi tiết bên ngoài (tuỳ chọn, để trống thì ẩn nút), vd. bài trên ArtStation
  * meta  : dòng phụ "năm · studio" (tuỳ chọn)
  * Chỉ dự án có video mới lên hologram trong phòng.
  */
@@ -44,6 +45,8 @@ export const WORK = [
         title: "Lies of P",
         meta: "2021 – 2023 · Neowiz / Round8 Studio",
         tags: ["Unreal", "Environment", "Optimization"],
+        cover: "/media/work/lies-of-p.jpg",
+        video: "/media/work/lies-of-p.mp4",
         description: "AAA soulslike. Modeled props and environments, built custom materials and procedural textures in UE5, and optimized memory and draw calls — delivering QC-ready assets on milestone deadlines.",
         link: "https://www.youtube.com/watch?v=R5TUYKAzGZs",
     },
@@ -52,6 +55,7 @@ export const WORK = [
         title: "Caliverse",
         meta: "2021 – 2023 · Lotte",
         tags: ["Unreal", "VR/XR", "Optimization"],
+        cover: "/media/work/caliverse.jpg",
         description: "Metaverse for VR/XR. Modular building assets, procedural foliage and performance optimization to hold frame rate on headsets.",
         link: "https://www.youtube.com/@Caliverse_io",
     },
@@ -60,7 +64,9 @@ export const WORK = [
         title: "National Museum Singapore",
         meta: "2025 – 2026 · DreamChasers Interactive",
         tags: ["Environment", "Optimization"],
+        cover: "/media/work/national-museum-singapore.jpg",
         description: "Created and optimized assets for the museum experience, handled the material graphs and set up the levels.",
+        link: "https://drive.google.com/drive/u/0/folders/12R7jcUFnn1ahZrxahlPCNXYKGuy8wreu",
     },
     {
         id: "net-runner",
@@ -68,6 +74,7 @@ export const WORK = [
         meta: "2026 · MageTechCorp",
         tags: ["Meta Horizon", "VR/XR"],
         description: "Game built with Meta Horizon Create for Meta Horizon Worlds.",
+        link: "", // TODO: link dự án
     },
     {
         id: "oblique-beat-saber",
@@ -75,12 +82,14 @@ export const WORK = [
         meta: "2026 · MageTechCorp",
         tags: ["Meta Horizon", "VR/XR"],
         description: "Rhythm game built with Meta Horizon Create for Meta Horizon Worlds.",
+        link: "", // TODO: link dự án
     },
     {
         id: "revenge-slots",
         title: "Revenge Game Slots",
         meta: "2024 – 2025 · Fetch",
         tags: ["Cocos", "Optimization"],
+        video: "/media/work/revenge-slots.mp4",
         description: "In-house slot games. Optimized 2D/3D animation and VFX assets for memory and draw calls, and integrated them in Cocos Creator.",
         link: "https://lobby.dev.revenge-games.com/?oc=demo&t=bjaswml5ee18hes1n3wqa0r7&theme=dark&l=en",
     },
@@ -89,6 +98,7 @@ export const WORK = [
         title: "Seoul City Wall Restoration",
         meta: "2021 – 2023 · Space Elvis",
         tags: ["Unreal", "Environment"],
+        video: "/media/work/space-elvis.mp4",
         description: "Historical heritage project. Modeled history props and supported the team as Technical Artist in Unreal.",
         link: "https://www.elviss.co/portfolio-all/seoul-city-wall-restoration-project",
     },
@@ -97,7 +107,10 @@ export const WORK = [
         title: "SKT ifland",
         meta: "2021 – 2023 · SK Telecom",
         tags: ["Unity", "Environment"],
+        cover: "/media/work/skt-ifland.jpg",
+        video: "/media/work/skt-ifland.mp4",
         description: "Metaverse platform. Technical Artist in Unity and environment modeling support.",
+        link: "", // TODO: link dự án
     },
     {
         id: "kidmo",
@@ -105,6 +118,7 @@ export const WORK = [
         meta: "2021 – 2023 · One Universe VN",
         tags: ["Unity"],
         description: "Technical Artist in Unity; R&D on a Stable Diffusion 1.5 asset pipeline.",
+        link: "", // TODO: link dự án
     },
     {
         id: "room-portfolio",
@@ -124,24 +138,33 @@ export const ABOUT = {
     now: "MageTechCorp · Meta Horizon Worlds",
     // Số liệu nổi bật ở cột trái
     highlights: [
-        { value: "5+", label: "Years" },
-        { value: "6", label: "Studios" },
+        { value: "6+", label: "Years" },
+        { value: "5", label: "Studios" },
         { value: "3", label: "Engines" },
     ],
     // Thanh kỹ năng chính (0 → 100, tự đánh giá)
     skills: [
         { name: "Unreal Engine", level: 90 },
         { name: "Maya", level: 85 },
-        { name: "Substance", level: 85 },
         { name: "Blender", level: 80 },
+        { name: "Substance Painter", level: 85 },
+        { name: "Substance Designer", level: 75 },
+        { name: "Photoshop/ PhotoCraft", level: 85 },
         { name: "Python / C++", level: 78 },
         { name: "Unity", level: 72 },
+        { name: "Cocos / Godots", level: 70 },
+        { name: "Marmoset Toolbag ", level: 90 },
+        { name: "SpeedTree ", level: 85 },
+        { name: "GaeA ", level: 75 },
+        { name: "Claude/Antigravity/Codex ", level: 95 },
+        { name: "Rider/Webstorm/Pycharm", level: 85 },
     ],
     // Bộ công cụ chia theo nhóm (dạng tag)
     toolkit: [
         { group: "Tech Art", items: ["Material / Shader Graph", "HLSL · GLSL", "PCG", "HLOD · Foliage · Landscape", "Trimsheet", "Lumen · Path Tracing", "Niagara", "Anim Blueprint"] },
         { group: "3D DCC", items: ["Maya", "Blender", "ZBrush", "Substance Painter", "Substance Designer", "Marmoset", "SpeedTree", "Gaea", "EmberGen", "Cascadeur"] },
         { group: "Engines", items: ["Unreal Engine", "Unity", "Cocos Creator", "Meta Horizon"] },
+        { group: "Engines C++ ", items: ["Game Mode, Game State", "Character/Pawn", "Actor", "State Tree", "EQS", "Behavior Trees/ Blackboard", "MCP", "GAS"," Vibe code"] },
         { group: "Code & Pipeline", items: ["Python", "C++", "C#", "Maya / Blender tools", "Three.js", "Git · Perforce", "Stable Diffusion · ComfyUI"] },
         { group: "2D & Video", items: ["Photoshop", "Illustrator", "Spine 2D", "DaVinci Resolve", "After Effects"] },
     ],
@@ -162,12 +185,64 @@ export const ABOUT = {
     // Bảng chỉ số hình lục giác kiểu game (0 → 100), thứ tự theo chiều kim đồng hồ từ đỉnh trên cùng
     stats: [
         // TODO: chỉnh lại theo cảm nhận của bạn
-        { label: "Modeling", value: 86 },
+        { label: "3D Modeling", value: 86 },
         { label: "Shader", value: 84 },
-        { label: "Optimize", value: 88 },
-        { label: "Code", value: 76 },
+        { label: "Optimized", value: 88 },
+        { label: "Program", value: 76 },
         { label: "Pipeline", value: 80 },
         { label: "R&D", value: 82 },
+    ],
+
+    stats_2: [
+        // TODO: chỉnh lại theo cảm nhận của bạn
+        { label: "Creative", value: 86 },
+        { label: "Programming", value: 84 },
+        { label: "Optimized", value: 88 },
+        { label: "Art Skill", value: 76 },
+        { label: "Problem Solve", value: 80 },
+        { label: "R&D", value: 82 },
+    ],
+    // Tên 2 tab chuyển bảng lục giác: [stats, stats_2]
+    statTabs: ["Tech", "Core"],
+
+    /**
+     * Cây kỹ năng kiểu game (dưới bảng lục giác). Mỗi nhánh mở dần từ trên xuống.
+     * level / max: số điểm đã nâng — level = max → MAX (vàng), level = 0 → khoá
+     * note : mô tả ngắn khi rê chuột (tuỳ chọn)
+     */
+    skillTree: [
+        // TODO: chỉnh lại level theo cảm nhận của bạn
+        {
+            branch: "Art",
+            color: "#ff6bd6",
+            nodes: [
+                { label: "Modeling", level: 5, max: 5, note: "Low / mid / high poly, hard-surface & organic" },
+                { label: "PBR Texture", level: 5, max: 5, note: "Substance Painter / Designer, trimsheet, tiling" },
+                { label: "Sculpt", level: 3, max: 5, note: "ZBrush" },
+                { label: "Rig & Anim", level: 2, max: 5, note: "Character / mechanic rigging, basic game animation" },
+            ],
+        },
+        {
+            branch: "Tech Art",
+            color: "#66e0ff",
+            nodes: [
+                { label: "Shader", level: 5, max: 5, note: "Material / Shader Graph, HLSL · GLSL" },
+                { label: "Optimize", level: 5, max: 5, note: "Memory, draw calls, HLOD, LOD, mipmap" },
+                { label: "PCG", level: 4, max: 5, note: "Procedural foliage, landscape, PCG tools" },
+                { label: "Lighting", level: 4, max: 5, note: "Lumen, Path Tracing" },
+                { label: "VFX", level: 2, max: 5, note: "Niagara, 2D VFX" },
+            ],
+        },
+        {
+            branch: "Code",
+            color: "#7cf0c5",
+            nodes: [
+                { label: "Python", level: 4, max: 5, note: "Pipeline scripts, Maya / Blender add-ons" },
+                { label: "C++ / C#", level: 4, max: 5, note: "Unreal gameplay framework, Unity" },
+                { label: "Prototype", level: 3, max: 5, note: "Minimap, pickup, inventory, HUD" },
+                { label: "AI Gen", level: 3, max: 5, note: "Stable Diffusion, ComfyUI, LoRA, ControlNet" },
+            ],
+        },
     ],
 };
 
