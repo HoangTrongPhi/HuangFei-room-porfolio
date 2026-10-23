@@ -2,7 +2,7 @@
 // Popup MY WORK: lưới thẻ dự án (lọc theo tag, nghiêng 3D theo chuột, rê vào thì phát video)
 // → bấm thẻ mở trang chi tiết ngay trong popup.
 import gsap from "gsap";
-import { h, openExternal } from "../dom.js";
+import { h } from "../dom.js";
 import { createPopup } from "../popup.js";
 import { track } from "../../core/analytics.js";
 
@@ -27,11 +27,7 @@ export function createWorkPopup(projects, portfolioUrl) {
         h("div", { class: "work-filters", "data-stagger": true }, chips),
         grid,
         h("div", { class: "work-footer", "data-stagger": true },
-            h("button", {
-                class: "btn btn-primary",
-                type: "button",
-                onClick: () => { track("click", "portfolio-pdf"); openExternal(portfolioUrl); },
-            }, "Full portfolio (PDF) ↗"),
+            externalLink(portfolioUrl, "portfolio-pdf", "Full portfolio (PDF) ↗"),
         ),
     );
     cards.forEach((c) => c.el.setAttribute("data-stagger", ""));
@@ -68,11 +64,7 @@ export function createWorkPopup(projects, portfolioUrl) {
                 project.meta && h("span", { class: "work-meta" }, project.meta),
                 h("div", { class: "work-tags" }, project.tags.map((t) => h("span", { class: "tag" }, t))),
                 h("p", {}, project.description),
-                project.link && h("button", {
-                    class: "btn btn-primary",
-                    type: "button",
-                    onClick: () => { track("click", `link-${project.id}`); openExternal(project.link); },
-                }, "View project ↗"),
+                project.link && externalLink(project.link, `link-${project.id}`, "View project ↗"),
             ),
         );
         // Thuộc tính muted phải set qua property thì autoplay mới chạy
@@ -124,6 +116,18 @@ export function createWorkPopup(projects, portfolioUrl) {
         showDetail(project);
     };
     return popup;
+}
+
+// Link ngoài dùng <a target="_blank"> thật thay vì window.open: trình chặn popup / extension
+// không chặn được, và bấm chuột giữa / Ctrl+click mở tab nền như link thường.
+function externalLink(url, trackId, label) {
+    return h("a", {
+        class: "btn btn-primary",
+        href: url,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        onClick: () => track("click", trackId),
+    }, label);
 }
 
 function createCard(project, onSelect) {

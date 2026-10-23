@@ -121,6 +121,7 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     border-radius: 8px;
     border: 1px solid transparent;
     font: 600 14px/1 var(--pp-sans);
+    text-decoration: none; /* nút dạng <a> (link ngoài) */
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
