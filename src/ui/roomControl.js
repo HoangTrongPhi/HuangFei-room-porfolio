@@ -8,6 +8,7 @@ import { h } from "./dom.js";
 import { roomFx } from "../core/roomFx.js";
 import { track } from "../core/analytics.js";
 import { toast } from "./toast.js";
+import { makeDraggable } from "./draggable.js";
 
 const SWATCHES = [
     { id: "rainbow", label: "Rainbow", color: null },
@@ -128,8 +129,9 @@ export function createRoomControl({ renderer, bloom, particles }) {
         h("div", { class: "rc-row rc-row--end" }, reset),
     );
     const collapse = h("button", { type: "button", class: "rc-collapse", "aria-expanded": "true", "aria-controls": "rc-body", "aria-label": "Collapse room control" }, "▾");
+    const head = h("div", { class: "rc-head" }, h("span", {}, "// room control"), collapse);
     const panel = h("aside", { class: "room-control", "aria-label": "Room control" },
-        h("div", { class: "rc-head" }, h("span", {}, "// room control"), collapse),
+        head,
         content,
     );
     collapse.addEventListener("click", () => setCollapsed(!panel.classList.contains("is-collapsed")));
@@ -145,6 +147,7 @@ export function createRoomControl({ renderer, bloom, particles }) {
     setColor(null, "rainbow", true);
 
     document.body.append(panel);
+    makeDraggable(panel, { key: "room-control", handle: head });
 
     return {
         /** Hiện dòng chọn hình pixel, đồng bộ với popup của loa */

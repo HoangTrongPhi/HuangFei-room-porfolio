@@ -40,6 +40,7 @@ export function createPopup(id, { title, anim = "reveal", className = "", body, 
 
     const popup = { id, el, panel, head, closeButton, anim, onOpen, onClose, live };
     popups.set(id, popup);
+    dragByHead(panel, head);
     return popup;
 }
 
@@ -121,6 +122,28 @@ function buildTimeline({ el, panel, anim }, { x, y }) {
         tl.fromTo(items, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: "power2.out" }, 0.3);
     }
     return tl;
+}
+
+// Kéo popup bằng thanh tiêu đề (chỉ chuột/bút, màn hình rộng). Vị trí về giữa mỗi lần mở lại
+// vì finish() xoá transform của panel. Thanh tiêu đề luôn còn trong màn hình để kéo lại được.
+function dragByHead(panel, head) {
+    let start = null;
+    head.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0 || e.pointerType === "touch" || e.target.closest("button") || innerWidth <= 720) return;
+        start = { x: e.clientX, y: e.clientY, tx: gsap.getProperty(panel, "x"), ty: gsap.getProperty(panel, "y"), rect: head.getBoundingClientRect() };
+        head.setPointerCapture(e.pointerId);
+        head.classList.add("is-dragging");
+    });
+    head.addEventListener("pointermove", (e) => {
+        if (!start) return;
+        const { rect } = start;
+        const dx = Math.min(Math.max(e.clientX - start.x, 40 - rect.right), innerWidth - 40 - rect.left);
+        const dy = Math.min(Math.max(e.clientY - start.y, -rect.top), innerHeight - rect.bottom);
+        gsap.set(panel, { x: start.tx + dx, y: start.ty + dy });
+    });
+    const end = () => { start = null; head.classList.remove("is-dragging"); };
+    head.addEventListener("pointerup", end);
+    head.addEventListener("pointercancel", end);
 }
 
 // Esc để đóng; Tab chỉ chạy vòng trong popup đang mở

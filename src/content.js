@@ -247,14 +247,17 @@ export const ABOUT = {
 };
 
 /**
- * Game hay chơi — popup HOBBY (mở từ menu hoặc bấm bức poster trong phòng).
- * id    : chữ không dấu / số / dấu - (tên sự kiện click trong admin: hobby-<id>)
- * color : màu nhận diện của thẻ
- * link  : trang chủ của game (bấm thẻ để mở)
- * note  : cảm nhận / vai trò hay chơi (tuỳ chọn, để trống thì ẩn)
+ * Sở thích — popup HOBBY (mở từ menu hoặc bấm bức poster trong phòng), chia 3 tab: Games / Music / Films.
+ * Tab nào để mảng rỗng thì tự ẩn. Mỗi tab có intro riêng (gameIntro / musicIntro / filmIntro).
+ * id    : chữ không dấu / số / dấu - (tên sự kiện click trong admin: hobby-<id>, hobby-music-<id>, hobby-film-<id>)
+ * color : màu nhận diện của thẻ / đĩa nhạc / poster
+ * link  : bấm vào thì mở (trang chủ game, video YouTube / Spotify, trang IMDb)
+ * note  : cảm nhận ngắn (tuỳ chọn, để trống thì ẩn)
  */
 export const HOBBY = {
-    intro: "Games I keep coming back to after work.", // TODO: viết lại theo ý bạn
+    gameIntro: "Games I keep coming back to after work.", // TODO: viết lại theo ý bạn
+    musicIntro: "On repeat while I model, texture and debug shaders.", // TODO
+    filmIntro: "Films I can rewatch any time.", // TODO
     games: [
         {
             id: "conquerors-blade",
@@ -305,6 +308,117 @@ export const HOBBY = {
             color: "#b8463c",
             link: "https://www.totalwar.com/games/three-kingdoms/",
             note: "The poster on my wall.",
+        },
+    ],
+    // TODO: thay bằng các bài bạn thích. link nên là video YouTube / bài trên Spotify
+    music: [
+        {
+            id: "merry-go-round-of-life",
+            title: "Merry-Go-Round of Life",
+            artist: "Joe Hisaishi",
+            genre: "Soundtrack",
+            year: 2004,
+            color: "#e0a458",
+            link: "https://www.youtube.com/results?search_query=Merry-Go-Round+of+Life+Joe+Hisaishi",
+            note: "",
+        },
+        {
+            id: "time-hans-zimmer",
+            title: "Time",
+            artist: "Hans Zimmer",
+            genre: "Soundtrack",
+            year: 2010,
+            color: "#6c8cd5",
+            link: "https://www.youtube.com/results?search_query=Time+Hans+Zimmer+Inception",
+            note: "",
+        },
+        {
+            id: "legends-never-die",
+            title: "Legends Never Die",
+            artist: "Against The Current",
+            genre: "Rock",
+            year: 2017,
+            color: "#c8aa6e",
+            link: "https://www.youtube.com/results?search_query=Legends+Never+Die+Against+The+Current",
+            note: "Worlds 2017 anthem.",
+        },
+        {
+            id: "faded",
+            title: "Faded",
+            artist: "Alan Walker",
+            genre: "EDM",
+            year: 2015,
+            color: "#66e0ff",
+            link: "https://www.youtube.com/results?search_query=Faded+Alan+Walker",
+            note: "",
+        },
+        {
+            id: "believer",
+            title: "Believer",
+            artist: "Imagine Dragons",
+            genre: "Rock",
+            year: 2017,
+            color: "#ff6b6b",
+            link: "https://www.youtube.com/results?search_query=Believer+Imagine+Dragons",
+            note: "",
+        },
+    ],
+    // TODO: thay bằng phim bạn thích. rating: điểm của bạn trên thang 5 (tuỳ chọn)
+    films: [
+        {
+            id: "interstellar",
+            title: "Interstellar",
+            director: "Christopher Nolan",
+            genre: "Sci-fi",
+            year: 2014,
+            rating: 5,
+            color: "#4a7bb7",
+            link: "https://www.imdb.com/title/tt0816692/",
+            note: "",
+        },
+        {
+            id: "spirited-away",
+            title: "Spirited Away",
+            director: "Hayao Miyazaki",
+            genre: "Animation",
+            year: 2001,
+            rating: 5,
+            color: "#d96c75",
+            link: "https://www.imdb.com/title/tt0245429/",
+            note: "",
+        },
+        {
+            id: "red-cliff",
+            title: "Red Cliff",
+            director: "John Woo",
+            genre: "Historical",
+            year: 2008,
+            rating: 4,
+            color: "#b8463c",
+            link: "https://www.imdb.com/title/tt0425637/",
+            note: "Three Kingdoms on the big screen.",
+        },
+        {
+            id: "inception",
+            title: "Inception",
+            director: "Christopher Nolan",
+            genre: "Sci-fi",
+            year: 2010,
+            rating: 5,
+            color: "#7a8fa6",
+            link: "https://www.imdb.com/title/tt1375666/",
+            note: "",
+        },
+        {
+            id: "lotr-return-of-the-king",
+            title: "The Lord of the Rings: The Return of the King",
+            director: "Peter Jackson",
+            genre: "Fantasy",
+            year: 2003,
+            rating: 5,
+            color: "#c9a227",
+            link: "https://www.imdb.com/title/tt0167260/",
+            note: "",
         },
     ],
 };

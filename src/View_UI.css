@@ -3,10 +3,10 @@
     --dock-cyan: #66e0ff;
     --dock-mono: ui-monospace, "Cascadia Code", Consolas, "Courier New", monospace;
 
+    /* Góc phải dưới — room control chiếm góc phải trên, hai panel không còn chồng nhau */
     position: fixed;
-    top: 50%;
     right: 24px;
-    transform: translateY(-50%);
+    bottom: 20px;
     z-index: 10; /* luôn nằm trên canvas */
     display: flex;
     flex-direction: column;
@@ -22,7 +22,7 @@
 }
 
 /* Ẩn trong lúc intro lắp ráp căn phòng, hiện ra khi xong (main.js thêm body.is-ready) */
-body:not(.is-ready) #ui-overlay { opacity: 0; pointer-events: none; transform: translate(16px, -50%); }
+body:not(.is-ready) #ui-overlay { opacity: 0; pointer-events: none; transform: translateX(16px); }
 #ui-overlay { transition: opacity 0.5s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
 .dock-title {
@@ -405,6 +405,14 @@ body.popup-open .hotspots { display: none; }
     .hotspot-dot::after { animation: none; }
 }
 
+/* ===== Kéo thả panel HUD (src/ui/draggable.js) ===== */
+@media (min-width: 721px) and (pointer: fine) {
+    .drag-handle { cursor: grab; user-select: none; }
+    .drag-handle :is(button, input, a, label, [role="switch"]) { cursor: pointer; }
+    .is-dragging, .is-dragging .drag-handle { cursor: grabbing; }
+}
+.is-dragging { transition: none !important; box-shadow: 0 0 0 1px rgba(102, 224, 255, 0.55), 0 18px 40px rgba(0, 0, 0, 0.5); }
+
 /* ===== Bảng điều khiển phòng (src/ui/roomControl.js) ===== */
 .room-control {
     position: fixed;
@@ -424,6 +432,8 @@ body.popup-open .hotspots { display: none; }
     transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-sizing: border-box;
 }
+/* Chừa chỗ cho dock navigate bên dưới (~210px); màn thấp thì cuộn bên trong panel */
+.room-control:not(.is-moved) { max-height: calc(100dvh - 270px); overflow-y: auto; scrollbar-width: thin; }
 body:not(.is-ready) .room-control { opacity: 0; pointer-events: none; transform: translateX(16px); }
 body.popup-open .room-control { opacity: 0.25; pointer-events: none; }
 

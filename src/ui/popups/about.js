@@ -146,24 +146,5 @@ export function createAboutPopup(profile, about, cvUrl) {
         },
     });
 
-    makeDraggable(popup.panel, popup.head);
     return popup;
-}
-
-// Kéo panel bằng thanh tiêu đề (chỉ chuột/bút, không áp dụng màn hình nhỏ)
-function makeDraggable(panel, handle) {
-    let start = null;
-    handle.addEventListener("pointerdown", (e) => {
-        if (e.pointerType === "touch" || e.target.closest("button") || innerWidth < 720) return;
-        start = { x: e.clientX, y: e.clientY, tx: gsap.getProperty(panel, "x"), ty: gsap.getProperty(panel, "y") };
-        handle.setPointerCapture(e.pointerId);
-        handle.classList.add("is-dragging");
-    });
-    handle.addEventListener("pointermove", (e) => {
-        if (!start) return;
-        gsap.set(panel, { x: start.tx + e.clientX - start.x, y: start.ty + e.clientY - start.y });
-    });
-    const end = () => { start = null; handle.classList.remove("is-dragging"); };
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
 }

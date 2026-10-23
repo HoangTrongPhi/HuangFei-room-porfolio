@@ -5,6 +5,7 @@
 import gsap from "gsap";
 import { track } from "../core/analytics.js";
 import { prefersReducedMotion } from "./dom.js";
+import { makeDraggable } from "./draggable.js";
 
 const GLYPHS = "!<>-_/[]{}=+*^?#01";
 const SCRAMBLE_MS = 380;
@@ -19,6 +20,7 @@ export function initMenu(actions) {
     const items = [...nav.querySelectorAll(".menu-item[data-link]")];
     let hovered = null;
     let active = null;
+    makeDraggable(nav, { key: "navigate" }); // kéo từ tiêu đề "// navigate" / viền dock
 
     // Vạch sáng bên trái trượt tới nút đang hover (ưu tiên) hoặc nút đang sáng theo vật thể 3D
     function moveIndicator() {

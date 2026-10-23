@@ -5,6 +5,7 @@
 import gsap from "gsap";
 import { h } from "./dom.js";
 import { toast } from "./toast.js";
+import { makeDraggable } from "./draggable.js";
 
 /**
  * @param {object} opt
@@ -60,11 +61,12 @@ export function createHud({ profile, trackTitle, getMusic }) {
 
     const root = h("div", { class: "hud-root", hidden: true }, card, music);
     document.body.append(root);
+    makeDraggable(card, { key: "profile" });
 
     return {
         show() {
             root.hidden = false;
-            gsap.from(card, { x: -30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "all" });
+            gsap.from(card, { x: -30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform,opacity" }); // giữ left/top nếu thẻ đã bị kéo đi
             gsap.from(music, { y: 30, opacity: 0, duration: 0.6, delay: 0.15, ease: "power3.out", clearProps: "all" });
         },
         /** Gọi mỗi frame với 4 dải tần 0 → 1. */

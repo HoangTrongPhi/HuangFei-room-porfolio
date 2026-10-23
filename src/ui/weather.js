@@ -5,6 +5,7 @@
 // Dữ liệu: Open-Meteo (không cần API key), làm mới mỗi 15 phút.
 import gsap from "gsap";
 import { h } from "./dom.js";
+import { makeDraggable } from "./draggable.js";
 
 const REFRESH_MS = 15 * 60 * 1000;
 const HOURS = 12;
@@ -44,6 +45,7 @@ export function createWeather(place) {
         chart,
     );
     document.body.append(panel);
+    makeDraggable(panel, { key: "weather" });
 
     // ===== Icon động =====
     const ictx = icon.getContext("2d");
