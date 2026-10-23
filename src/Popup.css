@@ -270,8 +270,19 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     transition: transform 0.4s;
 }
 .hobby-card:hover .hobby-initials { transform: scale(1.08); }
+/* Ảnh bìa phủ kín khung (thẻ game / poster phim), phóng nhẹ khi rê chuột */
+.hobby-cover .hobby-img, .hobby-poster .hobby-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+}
+.hobby-card:hover .hobby-img, .hobby-film:hover .hobby-img { transform: scale(1.06); }
 .hobby-year {
     position: absolute;
+    z-index: 1;
     top: 8px;
     right: 8px;
     padding: 2px 8px;
@@ -354,6 +365,16 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     border-radius: 50%;
     background: radial-gradient(circle, #030a16 0 14%, var(--c) 16%);
 }
+/* Có ảnh bìa: nhãn giữa to hơn, ảnh tròn có lỗ đĩa ở tâm */
+.hobby-vinyl.has-cover i { inset: 20%; overflow: hidden; background: none; }
+.hobby-vinyl.has-cover .hobby-img { width: 100%; height: 100%; object-fit: cover; }
+.hobby-vinyl.has-cover i::after {
+    content: "";
+    position: absolute;
+    inset: 42%;
+    border-radius: 50%;
+    background: #030a16;
+}
 .hobby-track:hover .hobby-vinyl, .hobby-track:focus-visible .hobby-vinyl { animation-play-state: running; }
 @keyframes vinyl-spin { to { transform: rotate(360deg); } }
 .hobby-track-text { display: grid; gap: 2px; min-width: 0; }
@@ -432,7 +453,14 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     transition: transform 0.4s;
 }
 .hobby-film:hover .hobby-poster-title { transform: scale(1.06); }
-.hobby-stars { position: absolute; left: 10px; bottom: 8px; font-size: 13px; letter-spacing: 2px; color: #ffd166; text-shadow: 0 0 8px rgba(255, 209, 102, 0.6); }
+/* Poster có ảnh: phủ lớp tối ở đáy để sao chấm điểm vẫn đọc được */
+.hobby-poster.has-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(3, 10, 22, 0.85), transparent 35%);
+}
+.hobby-stars { position: absolute; z-index: 1; left: 10px; bottom: 8px; font-size: 13px; letter-spacing: 2px; color: #ffd166; text-shadow: 0 0 8px rgba(255, 209, 102, 0.6); }
 .hobby-stars-off { color: rgba(255, 255, 255, 0.2); text-shadow: none; }
 .hobby-film-info { padding: 10px 12px 12px; display: grid; gap: 6px; }
 

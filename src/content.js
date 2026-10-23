@@ -398,6 +398,8 @@ export const PIPELINE = {
  * Tab nào để mảng rỗng thì tự ẩn. Mỗi tab có intro riêng (gameIntro / musicIntro / filmIntro).
  * id    : chữ không dấu / số / dấu - (tên sự kiện click trong admin: hobby-<id>, hobby-music-<id>, hobby-film-<id>)
  * color : màu nhận diện của thẻ / đĩa nhạc / poster
+ * cover : ảnh trong /public (tuỳ chọn, để trống thì dùng màu) — game 16:9, nhạc vuông 1:1, phim poster 2:3.
+ *         Ảnh gốc ở Hobby/, bản dùng trên web ở public/media/hobby/
  * link  : bấm vào thì mở (trang chủ game, video YouTube / Spotify, trang IMDb)
  * note  : cảm nhận ngắn (tuỳ chọn, để trống thì ẩn)
  */
@@ -413,6 +415,7 @@ export const HOBBY = {
             studio: "Booming Tech",
             year: 2019,
             color: "#c8743a",
+            cover: "/media/hobby/games/conquerors-blade.webp",
             link: "https://www.conquerorsblade.com",
             note: "Play with my brother",
         },
@@ -423,6 +426,7 @@ export const HOBBY = {
             studio: "Riot Games",
             year: 2009,
             color: "#c8aa6e",
+            cover: "/media/hobby/games/league-of-legends.webp",
             link: "https://www.leagueoflegends.com",
             note: "",
         },
@@ -433,6 +437,7 @@ export const HOBBY = {
             studio: "Team Jade",
             year: 2024,
             color: "#5fae6b",
+            cover: "/media/hobby/games/delta-force.webp",
             link: "https://www.playdeltaforce.com",
             note: "",
         },
@@ -443,6 +448,7 @@ export const HOBBY = {
             studio: "Everstone Studio",
             year: 2025,
             color: "#5a9fd6",
+            cover: "/media/hobby/games/where-winds-meet.webp",
             link: "https://www.wherewindsmeetgame.com",
             note: "",
         },
@@ -453,6 +459,7 @@ export const HOBBY = {
             studio: "Creative Assembly",
             year: 2019,
             color: "#b8463c",
+            cover: "/media/hobby/games/total-war-three-kingdoms.webp",
             link: "https://www.totalwar.com/games/total-war-three-kingdoms",
             note: "The poster on my wall.",
         },
@@ -466,6 +473,7 @@ export const HOBBY = {
             genre: "Soundtrack",
             year: 2018,
             color: "#e0a458",
+            cover: "/media/hobby/music/thang-dien.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/watch?v=HXkh7EOqcQ4&list=RDHXkh7EOqcQ4&start_radio=1",
             note: "My best favorite song",
         },
@@ -476,6 +484,7 @@ export const HOBBY = {
             genre: "Soundtrack",
             year: 2020,
             color: "#6c8cd5",
+            cover: "/media/hobby/music/cho-doi-co-dang-so.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/watch?v=oZIC9M87sLo&list=RDHXkh7EOqcQ4&index=8",
             note: "",
         },
@@ -486,6 +495,7 @@ export const HOBBY = {
             genre: "Rock",
             year: 2017,
             color: "#c8aa6e",
+            cover: "/media/hobby/music/legends-never-die.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/results?search_query=Legends+Never+Die+Against+The+Current",
             note: "Worlds 2017 anthem.",
         },
@@ -496,6 +506,7 @@ export const HOBBY = {
             genre: "Soundtrack",
             year: 2024,
             color: "#66e0ff",
+            cover: "/media/hobby/music/nhung-loi-hua-bo-quen.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/watch?v=h6RONxjPBf4&list=RDHXkh7EOqcQ4&index=9",
             note: "",
         },
@@ -506,6 +517,7 @@ export const HOBBY = {
             genre: "Rock",
             year: 2017,
             color: "#ff6b6b",
+            cover: "/media/hobby/music/believer.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/watch?v=7wtfhZwyrcc&list=RD7wtfhZwyrcc&start_radio=1",
             note: "",
         },
@@ -516,6 +528,7 @@ export const HOBBY = {
             genre: "Soundtrack",
             year: 2022,
             color: "#ffb9f7",
+            cover: "/media/hobby/music/thich-thich.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.youtube.com/watch?v=OqdA6DKV1Fs&list=RDOqdA6DKV1Fs&start_radio=1",
             note: "",
         },
@@ -530,6 +543,7 @@ export const HOBBY = {
             year: 2014,
             rating: 5,
             color: "#4a7bb7",
+            cover: "/media/hobby/films/interstellar.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.imdb.com/title/tt0816692/",
             note: "",
         },
@@ -541,6 +555,7 @@ export const HOBBY = {
             year: 2001,
             rating: 5,
             color: "#d96c75",
+            cover: "/media/hobby/films/spirited-away.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.imdb.com/title/tt0245429/",
             note: "",
         },
@@ -552,6 +567,7 @@ export const HOBBY = {
             year: 2008,
             rating: 4,
             color: "#b8463c",
+            cover: "/media/hobby/films/red-cliff.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.imdb.com/title/tt0425637/",
             note: "Three Kingdoms on the big screen.",
         },
@@ -563,6 +579,7 @@ export const HOBBY = {
             year: 2010,
             rating: 5,
             color: "#7a8fa6",
+            cover: "/media/hobby/films/inception.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.imdb.com/title/tt1375666/",
             note: "",
         },
@@ -574,6 +591,7 @@ export const HOBBY = {
             year: 2003,
             rating: 5,
             color: "#c9a227",
+            cover: "/media/hobby/films/lotr-return-of-the-king.jpg", // placeholder — thay bằng ảnh thật
             link: "https://www.imdb.com/title/tt0167260/",
             note: "",
         },

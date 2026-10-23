@@ -1,7 +1,7 @@
 // ui/popups/hobby.js
 // Popup HOBBY: 3 tab sở thích, mỗi tab một kiểu hiển thị riêng (tab nào trống thì ẩn):
 //   Games → catalog thẻ game, lọc theo thể loại, thẻ nghiêng 3D theo chuột
-//   Music → playlist, đĩa than mang màu bài hát quay khi rê chuột
+//   Music → playlist, đĩa than (nhãn giữa là ảnh bìa bài hát) quay khi rê chuột
 //   Films → poster dọc, chấm điểm sao
 // Bấm vào mục nào cũng mở link ngoài (trang game / bài nhạc / trang phim).
 import gsap from "gsap";
@@ -124,7 +124,9 @@ function createGameCard(game) {
         onClick: () => { track("click", `hobby-${game.id}`); openExternal(game.link); },
     },
         h("div", { class: "hobby-cover", "aria-hidden": "true" },
-            h("span", { class: "hobby-initials" }, initialsOf(game.title)),
+            game.cover
+                ? coverImg(game.cover)
+                : h("span", { class: "hobby-initials" }, initialsOf(game.title)),
             h("span", { class: "hobby-year" }, String(game.year)),
         ),
         h("div", { class: "hobby-info" },
@@ -149,7 +151,7 @@ function buildMusic(tracks) {
         onClick: () => { track("click", `hobby-music-${song.id}`); openExternal(song.link); },
     },
         h("span", { class: "hobby-track-index", "aria-hidden": "true" }, String(i + 1).padStart(2, "0")),
-        h("span", { class: "hobby-vinyl", "aria-hidden": "true" }, h("i")),
+        h("span", { class: `hobby-vinyl${song.cover ? " has-cover" : ""}`, "aria-hidden": "true" }, h("i", {}, song.cover && coverImg(song.cover))),
         h("span", { class: "hobby-track-text" },
             h("strong", {}, song.title),
             h("span", { class: "muted" }, song.artist),
@@ -174,9 +176,10 @@ function buildFilms(films) {
             "aria-label": `${film.title} (${film.year}) — open film page`,
             onClick: () => { track("click", `hobby-film-${film.id}`); openExternal(film.link); },
         },
-            h("div", { class: "hobby-poster", "aria-hidden": "true" },
+            h("div", { class: `hobby-poster${film.cover ? " has-cover" : ""}`, "aria-hidden": "true" },
+                film.cover && coverImg(film.cover),
                 h("span", { class: "hobby-year" }, String(film.year)),
-                h("span", { class: "hobby-poster-title" }, film.title),
+                !film.cover && h("span", { class: "hobby-poster-title" }, film.title),
                 rating > 0 && h("span", { class: "hobby-stars" }, "★".repeat(rating), h("span", { class: "hobby-stars-off" }, "★".repeat(5 - rating))),
             ),
             h("div", { class: "hobby-film-info" },
@@ -189,6 +192,11 @@ function buildFilms(films) {
         return el;
     });
     return { el: h("div", { class: "hobby-films" }, posters) };
+}
+
+// Ảnh bìa (game / đĩa nhạc / poster phim); không có ảnh thì dùng màu + chữ thay thế
+function coverImg(src) {
+    return h("img", { class: "hobby-img", src, alt: "", loading: "lazy", decoding: "async" });
 }
 
 // Chữ viết tắt làm "ảnh bìa": "League of Legends" → "LoL", "Delta Force" → "DF"
