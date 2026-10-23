@@ -1,4 +1,4 @@
-// content.js — nội dung hiển thị trên trang (popup Work / About / Contact, lời chào theo ref).
+// content.js — nội dung hiển thị trên trang (popup Work / About / Contact / Hobby, lời chào theo ref).
 // Muốn cập nhật portfolio thì chỉ cần sửa file này, không phải đụng vào code UI.
 // Các mục đánh dấu TODO đang là dữ liệu mẫu — hãy thay bằng nội dung thật trước khi deploy.
 
@@ -93,6 +93,69 @@ export const ABOUT = {
         { label: "Design", value: 80 },
         { label: "Social", value: 70 },
         { label: "Creative", value: 88 },
+    ],
+};
+
+/**
+ * Game hay chơi — popup HOBBY (mở từ menu hoặc bấm bức poster trong phòng).
+ * id    : chữ không dấu / số / dấu - (tên sự kiện click trong admin: hobby-<id>)
+ * color : màu nhận diện của thẻ
+ * link  : trang chủ của game (bấm thẻ để mở)
+ * note  : cảm nhận / vai trò hay chơi (tuỳ chọn, để trống thì ẩn)
+ */
+export const HOBBY = {
+    intro: "Games I keep coming back to after work.", // TODO: viết lại theo ý bạn
+    games: [
+        {
+            id: "conquerors-blade",
+            title: "Conqueror's Blade",
+            genre: "Tactical MMO",
+            studio: "Booming Tech",
+            year: 2019,
+            color: "#c8743a",
+            link: "https://www.conquerorsblade.com",
+            note: "",
+        },
+        {
+            id: "league-of-legends",
+            title: "League of Legends",
+            genre: "MOBA",
+            studio: "Riot Games",
+            year: 2009,
+            color: "#c8aa6e",
+            link: "https://www.leagueoflegends.com",
+            note: "",
+        },
+        {
+            id: "delta-force",
+            title: "Delta Force",
+            genre: "Tactical FPS",
+            studio: "Team Jade",
+            year: 2024,
+            color: "#5fae6b",
+            link: "https://www.playdeltaforce.com",
+            note: "",
+        },
+        {
+            id: "where-winds-meet",
+            title: "Where Winds Meet",
+            genre: "Open-world RPG",
+            studio: "Everstone Studio",
+            year: 2025,
+            color: "#5a9fd6",
+            link: "https://www.wherewindsmeetgame.com",
+            note: "",
+        },
+        {
+            id: "total-war-three-kingdoms",
+            title: "Total War: Three Kingdoms",
+            genre: "Strategy",
+            studio: "Creative Assembly",
+            year: 2019,
+            color: "#b8463c",
+            link: "https://www.totalwar.com/games/three-kingdoms/",
+            note: "The poster on my wall.",
+        },
     ],
 };
 

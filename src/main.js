@@ -24,6 +24,7 @@ import { openPopup } from "./ui/popup.js";
 import { createWorkPopup } from "./ui/popups/work.js";
 import { createAboutPopup } from "./ui/popups/about.js";
 import { createContactPopup } from "./ui/popups/contact.js";
+import { createHobbyPopup } from "./ui/popups/hobby.js";
 import { createArcade } from "./ui/arcade/console.js";
 import { setMutedSource } from "./ui/arcade/sfx.js";
 import { getVisitorName, showWelcome } from "./ui/welcome.js";
@@ -32,7 +33,7 @@ import { playIntro } from "./core/intro.js";
 import { createCameraFocus } from "./core/cameraFocus.js";
 import { createCleanerRobot } from "./core/cleanerRobot.js";
 import { createRoomMotion } from "./core/roomMotion.js";
-import { createKeyboardFx } from "./core/keyboardFx.js";
+import { createKeyboardHover } from "./core/keyboardHover.js";
 import { createInteractions } from "./core/interactions.js";
 import { createAudioLevel } from "./core/audioLevel.js";
 import { createHotspots } from "./ui/hotspots.js";
@@ -46,7 +47,7 @@ import { createPixelPopup } from "./ui/popups/pixel.js";
 import { createIdleHint } from "./ui/idleHint.js";
 import { prefersReducedMotion } from "./ui/dom.js";
 import { track } from "./core/analytics.js";
-import { PROFILE, LINKS, WORK, ABOUT, CONTACT, REF_NAMES, WEATHER } from "./content.js";
+import { PROFILE, LINKS, WORK, ABOUT, CONTACT, HOBBY, REF_NAMES, WEATHER } from "./content.js";
 
 // ================== CONFIG ==================
 const CONFIG = {
@@ -116,7 +117,7 @@ const CONFIG = {
         divoom: { label: "Pixel", popup: "pixel", view: [1, 0.3, 0.1], fill: 0.3 },
         // Bấm được nhưng không có chấm hotspot (đỡ rối): kệ chứng chỉ + sách trên tường, poster
         shelf: { label: "Skills", popup: "about", view: [0.2, 0.15, 1], fill: 0.5 },
-        poster: { label: "Artwork", popup: "work", view: [0.1, 0.05, 1], fill: 0.6 },
+        poster: { label: "Hobby", popup: "hobby", view: [0.1, 0.05, 1], fill: 0.6 }, // poster game → catalog game hay chơi
     },
     // Màn hình hologram chiếu video dự án (WORK có video), lơ lửng hai bên phòng — toạ độ thế giới (mét)
     holograms: {
@@ -227,11 +228,13 @@ initLoadingScreen(ready, {
 const workPopup = createWorkPopup(WORK, LINKS.portfolioPdf);
 createAboutPopup(PROFILE, ABOUT, LINKS.cv);
 createContactPopup(PROFILE, CONTACT, LINKS);
+createHobbyPopup(HOBBY);
 createArcade();
 setMutedSource(() => bgMusic?.muted ?? false); // tắt nhạc ở HUD thì mini game cũng im
 const menu = initMenu({
     "#mywork": (item) => openPopup("work", item),
     "#about": (item) => openPopup("about", item),
+    "#hobby": (item) => openPopup("hobby", item),
     "#contact": (item) => openPopup("contact", item),
 });
 
@@ -242,6 +245,7 @@ async function visit(id, objects) {
     exploring = true;
     idleHint.stop();
     interactions.setEnabled(false);
+    roomLife?.setInteractive(false);
     hotspots.hide();
     await focus.focus(objects, new THREE.Vector3(...spot.view), spot.fill ? { fill: spot.fill } : undefined);
     openPopup(spot.popup, null, {
@@ -250,6 +254,7 @@ async function visit(id, objects) {
             exploring = false;
             hotspots.show();
             interactions.setEnabled(true);
+            roomLife?.setInteractive(true);
         },
     });
 }
@@ -282,15 +287,18 @@ ready.then(async () => {
         const robot = createCleanerRobot(room);
         const motion = createRoomMotion(room);
         const keyboard = room.getObjectByName("Keyboard");
-        const keyboardFx = keyboard && createKeyboardFx(keyboard);
+        const keyboardHover = keyboard && createKeyboardHover(keyboard, camera, canvas);
         updaters.push(motion.update);
+        if (keyboardHover) updaters.push(keyboardHover.update);
         roomLife = {
             start() {
                 const reduced = prefersReducedMotion();
                 if (!reduced) robot?.start();
                 motion.start({ reduced });
-                keyboardFx?.setEnabled(true);
+                keyboardHover?.setEnabled(true);
             },
+            /** Tắt hover bàn phím khi camera bay tới vật thể / popup mở. */
+            setInteractive: (value) => keyboardHover?.setEnabled(value),
         };
         if (introDone) roomLife.start();
 
@@ -315,7 +323,7 @@ ready.then(async () => {
         .filter(([, objs]) => objs?.length)
         .map(([id, objs]) => ({ id, label: CONFIG.spots[id].label, objects: objs, onClick: () => visit(id, objs) })));
     // Rê chuột lên vật thể / hotspot → hotspot và nút menu tương ứng cùng sáng
-    const menuLinkOf = (id) => ({ work: "#mywork", about: "#about", contact: "#contact" })[CONFIG.spots[id]?.popup] ?? null;
+    const menuLinkOf = (id) => ({ work: "#mywork", about: "#about", contact: "#contact", hobby: "#hobby" })[CONFIG.spots[id]?.popup] ?? null;
     // Hologram: bấm → mở thẳng trang chi tiết dự án; hover do shader của hologram tự xử lý (không phủ lớp sáng)
     holograms = createHolograms(scene, WORK, CONFIG.holograms.slots);
     holograms.screens.forEach((screen) => {

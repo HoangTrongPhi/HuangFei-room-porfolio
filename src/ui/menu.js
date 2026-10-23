@@ -1,6 +1,6 @@
 // ui/menu.js
 // Menu điều hướng: dock kính bên phải (desktop) / thanh tab dưới đáy (điện thoại).
-// Hiệu ứng: chữ "giải mã" khi rê chuột, vạch sáng trượt theo nút đang chọn, phím tắt 1/2/3,
+// Hiệu ứng: chữ "giải mã" khi rê chuột, vạch sáng trượt theo nút đang chọn, phím tắt 1–4 (data-key),
 // và sáng theo vật thể 3D tương ứng đang được rê chuột (setActive).
 import gsap from "gsap";
 import { track } from "../core/analytics.js";
@@ -59,7 +59,7 @@ export function initMenu(actions) {
         });
     });
 
-    // Phím tắt 1/2/3 (bỏ qua khi đang gõ chữ, đang mở popup hoặc có phím bổ trợ)
+    // Phím tắt theo data-key (bỏ qua khi đang gõ chữ, đang mở popup hoặc có phím bổ trợ)
     window.addEventListener("keydown", (e) => {
         if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
         if (e.target.closest?.("input, textarea, [contenteditable]")) return;

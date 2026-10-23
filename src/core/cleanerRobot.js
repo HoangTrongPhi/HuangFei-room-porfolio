@@ -5,6 +5,7 @@
 import * as THREE from "three";
 import gsap from "gsap";
 import { createBlobShadow } from "./blobShadow.js";
+import { findIslands } from "../utils/meshIslands.js";
 
 // Toạ độ trong không gian của phòng (cm, trước khi scale 0.01). Đường đi tránh chân ghế,
 // tủ ngăn kéo và chồng hộp dưới bàn; điểm cuối nằm thẳng trước dock để lùi vào.
@@ -78,11 +79,12 @@ function splitRobot(mesh) {
     const geometry = mesh.geometry;
     const index = geometry.index.array;
     const position = geometry.attributes.position;
-    const components = findComponents(index, position);
-    if (components.length < 2) return null;
+    const islands = findIslands(geometry);
+    if (islands.length < 2) return null;
 
     // Đĩa robot = khối có đỉnh cao nhất thấp nhất (dock là khối cao)
-    const robotVertices = components.reduce((a, b) => (b.maxY < a.maxY ? b : a)).vertices;
+    const maxY = (island) => Math.max(...island.map((v) => position.getY(v)));
+    const robotVertices = new Set(islands.reduce((a, b) => (maxY(b) < maxY(a) ? b : a)));
 
     const robotTris = [];
     const dockTris = [];
@@ -115,34 +117,4 @@ function splitRobot(mesh) {
     robot.userData.radius = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
     mesh.parent.add(robot);
     return robot;
-}
-
-// Gom đỉnh thành các khối rời: nối đỉnh cùng tam giác và đỉnh trùng vị trí (seam UV/normal)
-function findComponents(index, position) {
-    const parent = Int32Array.from({ length: position.count }, (_, i) => i);
-    const find = (i) => {
-        while (parent[i] !== i) i = parent[i] = parent[parent[i]];
-        return i;
-    };
-    const union = (a, b) => { parent[find(a)] = find(b); };
-
-    for (let i = 0; i < index.length; i += 3) {
-        union(index[i], index[i + 1]);
-        union(index[i], index[i + 2]);
-    }
-    const byPosition = new Map();
-    for (let i = 0; i < position.count; i++) {
-        const key = `${position.getX(i).toFixed(4)},${position.getY(i).toFixed(4)},${position.getZ(i).toFixed(4)}`;
-        byPosition.has(key) ? union(i, byPosition.get(key)) : byPosition.set(key, i);
-    }
-
-    const groups = new Map();
-    for (let i = 0; i < position.count; i++) {
-        const root = find(i);
-        if (!groups.has(root)) groups.set(root, { vertices: new Set(), maxY: -Infinity });
-        const g = groups.get(root);
-        g.vertices.add(i);
-        g.maxY = Math.max(g.maxY, position.getY(i));
-    }
-    return [...groups.values()];
 }
