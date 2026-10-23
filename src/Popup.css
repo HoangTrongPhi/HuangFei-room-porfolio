@@ -470,6 +470,43 @@ body.popup-open #ui-overlay { opacity: 0.25; pointer-events: none; }
     animation: pp-spin-glow 6s linear infinite;
 }
 @keyframes pp-spin-glow { 50% { box-shadow: 0 0 45px rgba(178, 231, 255, 0.7); } }
+/* Logo tô màu bằng mask (logo.png nền trong suốt) */
+.about-logo {
+    display: block;
+    width: 74%;
+    height: 74%;
+    background: #04101f;
+    -webkit-mask: var(--logo) center / contain no-repeat;
+    mask: var(--logo) center / contain no-repeat;
+}
+.about-avatar-face { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; }
+/* Thẻ lật: mặt trước logo, mặt sau ảnh chân dung */
+.about-avatar--flip {
+    padding: 0;
+    border: 0;
+    background: none;
+    perspective: 600px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+.about-avatar-inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+.about-avatar--flip.is-flipped .about-avatar-inner { transform: rotateY(180deg); }
+.about-avatar--flip .about-avatar-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.about-avatar--flip .about-avatar-front { background: conic-gradient(from 0deg, var(--pp-accent), var(--pp-soft), #8b7bff, var(--pp-accent)); }
+.about-avatar--flip { background: none; }
+.about-avatar-back { transform: rotateY(180deg); overflow: hidden; box-shadow: inset 0 0 0 3px rgba(178, 231, 255, 0.8); }
+.about-avatar-back img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.about-avatar--flip:hover .about-avatar-inner { transform: rotateY(18deg); }
+.about-avatar--flip.is-flipped:hover .about-avatar-inner { transform: rotateY(162deg); }
+.about-avatar--flip:focus-visible { outline: 2px solid var(--pp-soft); outline-offset: 4px; }
 .about-name { margin: 0; font-size: 18px; color: var(--pp-soft); }
 .about-role { margin: 0 0 10px; color: var(--pp-muted); font: 12px/1.4 var(--pp-mono); letter-spacing: 0.15em; text-transform: uppercase; }
 

@@ -46,7 +46,7 @@ export function createAboutPopup(profile, about, cvUrl) {
 
     const body = h("div", { class: "about" },
         h("aside", { class: "about-side", "data-stagger": true },
-            h("div", { class: "about-avatar", "aria-hidden": "true" }, initials),
+            createAvatar(profile, initials),
             h("h3", { class: "about-name" }, profile.name),
             h("p", { class: "about-role" }, profile.role),
             about.now && h("p", { class: "about-now" }, h("i", { "aria-hidden": "true" }), about.now),
@@ -147,4 +147,28 @@ export function createAboutPopup(profile, about, cvUrl) {
     });
 
     return popup;
+}
+
+// Avatar dạng thẻ lật: mặt trước logo (hoặc chữ cái đầu), bấm → lật sang ảnh chân dung
+function createAvatar(profile, initials) {
+    const front = h("span", { class: "about-avatar-face about-avatar-front" },
+        profile.logo ? h("i", { class: "about-logo", style: `--logo: url("${profile.logo}")`, "aria-hidden": "true" }) : initials);
+    if (!profile.avatar) return h("div", { class: "about-avatar", "aria-hidden": "true" }, front);
+
+    const back = h("span", { class: "about-avatar-face about-avatar-back" },
+        h("img", { src: profile.avatar, alt: profile.name, width: 96, height: 96, loading: "lazy", decoding: "async" }));
+    const card = h("button", {
+        class: "about-avatar about-avatar--flip",
+        type: "button",
+        "aria-pressed": "false",
+        "aria-label": "Show photo",
+        title: "Click to flip",
+        onClick: () => {
+            const flipped = card.classList.toggle("is-flipped");
+            card.setAttribute("aria-pressed", String(flipped));
+            card.setAttribute("aria-label", flipped ? "Show logo" : "Show photo");
+            if (flipped) track("click", "avatar-photo");
+        },
+    }, h("span", { class: "about-avatar-inner" }, front, back));
+    return card;
 }

@@ -4,7 +4,7 @@
 // Các tấm luôn quay thẳng mặt về phía camera (nhìn từ trên xuống cũng không bị xiên) và lơ lửng nhấp nhô.
 import * as THREE from "three";
 import gsap from "gsap";
-import { createVideoTexture } from "./video.js";
+import { createVideoTexture, setVideoWanted } from "./video.js";
 
 const PANEL_W = 0.11;            // mét
 const PANEL_H = PANEL_W * 9 / 16;
@@ -89,7 +89,7 @@ export function createHolograms(scene, projects, slots) {
         const tint = new THREE.Color(tints[i % tints.length]);
         const material = new THREE.ShaderMaterial({
             uniforms: {
-                map: { value: createVideoTexture(project.video) },
+                map: { value: createVideoTexture(project.video, { autoplay: false }) }, // chỉ tải / phát khi tấm đang hiện
                 uTime: { value: 0 },
                 uHover: { value: 0 },
                 uReveal: { value: 0 },
@@ -114,6 +114,7 @@ export function createHolograms(scene, projects, slots) {
 
     let time = 0;
     let revealed = false;
+    let playing = false;
     const target = new THREE.Vector3();
 
     return {
@@ -123,6 +124,10 @@ export function createHolograms(scene, projects, slots) {
         update(delta, camera) {
             // Màn hình dọc (điện thoại): hai bên phòng không còn chỗ trống → ẩn
             group.visible = revealed && camera.aspect >= 1;
+            if (playing !== group.visible) { // ẩn → dừng giải mã video (đỡ tốn pin / CPU trên điện thoại)
+                playing = group.visible;
+                panels.forEach((p) => setVideoWanted(p.material.uniforms.map.value, playing));
+            }
             if (!group.visible) return;
             time += delta;
             panels.forEach((p) => {

@@ -398,8 +398,9 @@ body.popup-open .hotspots { display: none; }
 .hotspot:focus-visible .hotspot-dot { outline: 2px solid #b2e7ff; outline-offset: 3px; }
 
 /* Màn hình cảm ứng không có hover: luôn hiện nhãn */
-@media (hover: none) {
-    .hotspot-label { opacity: 1; transform: none; }
+/* Màn cảm ứng / điện thoại: chỉ giữ chấm sáng, ẩn tên để không che căn phòng (bấm chấm vẫn mở popup) */
+@media (hover: none), (max-width: 720px) {
+    .hotspot-label { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .hotspot-dot::after { animation: none; }
@@ -698,4 +699,14 @@ body.popup-open .weather { opacity: 0.25; }
 }
 @media (prefers-reduced-motion: reduce) {
     .wx-live i { animation: none; }
+}
+
+/* ===== Điện thoại / màn cảm ứng: bỏ kính mờ (backdrop-filter) =====
+   Canvas 3D bên dưới đổi mỗi khung hình → trình duyệt phải làm mờ lại liên tục, rất tốn GPU điện thoại.
+   Thay bằng nền đặc hơn để chữ vẫn dễ đọc. */
+@media (max-width: 720px), (pointer: coarse) {
+    *, *::before, *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .hud, .weather, .room-control, .idle-hint, .hotspot-label { background: rgba(6, 18, 37, 0.9); }
+    #ui-overlay { background: rgba(6, 18, 37, 0.95); }
+    .popup .popup-panel { background: rgba(6, 18, 37, 0.96); } /* Popup.css nạp sau → cần tăng độ ưu tiên */
 }

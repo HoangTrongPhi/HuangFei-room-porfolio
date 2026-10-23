@@ -10,6 +10,10 @@ export const PROFILE = {
     status: "Available for work", // để trống thì ẩn dòng trạng thái
     location: "Vietnam",
     timeZone: "Asia/Ho_Chi_Minh", // giờ địa phương hiển thị trên thẻ tên
+    // Popup About: logo hiện mặt trước, bấm vào lật sang ảnh. Bản gốc ở img/, bản nén cho web ở public/media/profile/
+    // (logo.png: nền trong suốt, chỉ dùng độ trong suốt làm khuôn → màu do CSS quyết định). Để trống thì hiện chữ cái đầu.
+    logo: "/media/profile/logo.png",
+    avatar: "/media/profile/avatar.webp",
 };
 
 // Panel thời tiết (dữ liệu Open-Meteo, miễn phí, không cần key) — đổi sang thành phố bạn đang sống
@@ -264,7 +268,7 @@ export const ABOUT = {
  */
 export const PIPELINE = {
     // TODO: chỉnh level / note theo cảm nhận của bạn
-    intro: "Game dev pipeline, left → right. Art and Code cross in the middle lane — Technical Art — then every road meets at Lead & Production. Drag to pan · scroll to zoom.",
+    intro: "Game dev pipeline, left → right. Art and Code cross in the middle lane — Technical Art — then every road meets at Lead & Production. Drag to pan · scroll or pinch to zoom.",
     stages: ["Pre-prod", "Production", "Look-dev", "Integration", "Optimize", "Ship & Live", "Lead", "Direct"],
     focus: [3, 6], // các cột bạn mạnh nhất (gạch sáng trên thanh giai đoạn)
     lanes: {

@@ -10,7 +10,9 @@ import * as THREE from "three";
 import gsap from "gsap";
 
 import { createRenderer } from "./core/renderer.js";
-import { isMobile, maxPixelRatio } from "./core/device.js";
+import { isMobile } from "./core/device.js";
+import { createAdaptiveQuality } from "./core/adaptiveQuality.js";
+import { suspendVideos } from "./core/video.js";
 import { createCamera } from "./core/camera.js";
 import { loadSceneModel } from "./core/models.js";
 import { applyRoomEnvironment } from "./core/light.js";
@@ -364,6 +366,8 @@ const bloom = CONFIG.bloom.enabled && !isMobile ? createBloom(renderer, CONFIG.b
 const roomControl = createRoomControl({ renderer, bloom, particles });
 const timer = new THREE.Timer();
 timer.connect(document); // tạm dừng khi tab bị ẩn để delta không nhảy vọt lúc quay lại
+// Máy yếu (nhất là điện thoại) → tự hạ độ phân giải render cho giữ FPS
+const quality = createAdaptiveQuality(renderer, (ratio) => particles.setPixelRatio(ratio));
 renderer.setAnimationLoop(() => {
     // Không truyền timestamp của rAF: nó có thể sớm hơn lúc tạo timer → delta âm ở frame đầu
     timer.update();
@@ -372,7 +376,10 @@ renderer.setAnimationLoop(() => {
     hud.updateBands(audioLevel?.getBands());
     // Popup đang che cảnh 3D → ngừng render (giữ khung hình cuối), nhường GPU cho popup / mini game
     // (popup "live" — vd. chọn hình loa Divoom — vẫn render để thấy thay đổi trực tiếp)
-    if (document.body.classList.contains("popup-open") && !document.body.classList.contains("popup-live")) return;
+    const covered = document.body.classList.contains("popup-open") && !document.body.classList.contains("popup-live");
+    suspendVideos(covered); // cảnh bị che → dừng giải mã video màn hình / hologram
+    if (covered) return;
+    if (introDone) quality.update(delta); // bỏ qua lúc intro: đang tải / dựng phòng nên FPS chưa phản ánh đúng
     updaters.forEach((update) => update(delta, level));
     pixel?.update(delta);
     controls.update(); // cần gọi mỗi frame vì bật damping
@@ -388,7 +395,6 @@ window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(maxPixelRatio());
+    quality.reset(); // giữ bậc độ phân giải hiện tại
     bloom?.setSize(window.innerWidth, window.innerHeight);
-    particles.setPixelRatio(renderer.getPixelRatio());
 });

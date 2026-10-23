@@ -160,22 +160,61 @@ export function createPipelinePopup(data) {
     const current = data.nodes.find((n) => n.current) ?? data.nodes[0];
     const focusCurrent = (animate) => centerOn(current, Math.max(view.s, 0.85), animate);
 
+    // Kéo 1 ngón / chuột để di chuyển; 2 ngón để zoom (pinch) trên điện thoại
+    const pointers = new Map(); // pointerId → {x, y} (toạ độ trong khung nhìn)
     let pan = null;
+    let pinch = null;
+    const local = (e) => {
+        const r = viewport.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const pinchState = () => {
+        const [a, b] = [...pointers.values()];
+        return { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    };
     viewport.addEventListener("pointerdown", (e) => {
         if (e.button !== 0 || e.target.closest(".pl-node, .pl-controls")) return;
         gsap.killTweensOf(view);
-        pan = { id: e.pointerId, x: e.clientX - view.x, y: e.clientY - view.y };
         viewport.setPointerCapture(e.pointerId);
+        pointers.set(e.pointerId, local(e));
+        if (pointers.size === 2) {
+            pan = null;
+            const p = pinchState();
+            // Điểm bản đồ đang nằm giữa 2 ngón → giữ nó dưới 2 ngón khi zoom
+            pinch = { ...p, s: view.s, wx: (p.mx - view.x) / view.s, wy: (p.my - view.y) / view.s };
+        } else if (pointers.size === 1) {
+            const p = local(e);
+            pan = { x: p.x - view.x, y: p.y - view.y };
+        }
         viewport.classList.add("is-panning");
     });
     viewport.addEventListener("pointermove", (e) => {
-        if (!pan || e.pointerId !== pan.id) return;
-        view.x = e.clientX - pan.x;
-        view.y = e.clientY - pan.y;
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, local(e));
+        if (pinch && pointers.size === 2) {
+            const p = pinchState();
+            view.s = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, pinch.s * (p.dist / pinch.dist)));
+            view.x = p.mx - pinch.wx * view.s;
+            view.y = p.my - pinch.wy * view.s;
+        } else if (pan) {
+            const p = local(e);
+            view.x = p.x - pan.x;
+            view.y = p.y - pan.y;
+        } else return;
         clampView();
         apply();
     });
-    const endPan = () => { pan = null; viewport.classList.remove("is-panning"); };
+    const endPan = (e) => {
+        pointers.delete(e.pointerId);
+        pinch = null;
+        if (pointers.size === 1) { // nhấc 1 ngón khi đang pinch → tiếp tục kéo bằng ngón còn lại
+            const p = [...pointers.values()][0];
+            pan = { x: p.x - view.x, y: p.y - view.y };
+            return;
+        }
+        pan = null;
+        viewport.classList.remove("is-panning");
+    };
     viewport.addEventListener("pointerup", endPan);
     viewport.addEventListener("pointercancel", endPan);
     viewport.addEventListener("wheel", (e) => {

@@ -1,34 +1,66 @@
 // core/video.js
 // Tạo VideoTexture từ file mp4. Three.js tự cập nhật frame cho VideoTexture
 // khi render, nên không cần set needsUpdate thủ công trong vòng lặp.
+// Mỗi video chỉ phát khi thật sự cần (giải mã video rất tốn trên điện thoại):
+//   - "wanted": nơi dùng video muốn nó chạy (vd. hologram đang hiện)
+//   - tạm dừng tất cả khi popup che cảnh 3D (suspendVideos) hoặc tab bị ẩn
+// Video chưa từng được cần (preload "none") thì chưa tải về.
 import * as THREE from "three";
 
-// Trình duyệt có thể chặn autoplay: gom tất cả video lại và
-// phát lại ở lần click đầu tiên của người dùng (chỉ 1 listener duy nhất).
 const videos = new Set();
-window.addEventListener("click", () => {
-    videos.forEach((video) => {
-        if (video.paused) video.play().catch(() => {});
-    });
-});
+let suspended = false;
+
+function sync(video) {
+    const want = video._wanted && !suspended && !document.hidden;
+    if (want && video.paused) video.play().catch(() => {}); // autoplay bị chặn → thử lại ở lần chạm/click sau
+    else if (!want && !video.paused) video.pause();
+}
+const syncAll = () => videos.forEach(sync);
+
+// Trình duyệt có thể chặn autoplay: thử phát lại ở lần click / chạm đầu tiên của người dùng
+window.addEventListener("click", syncAll);
+window.addEventListener("touchend", syncAll, { passive: true });
+document.addEventListener("visibilitychange", syncAll);
 
 // Mỗi file video chỉ tạo 1 thẻ <video>: nhiều texture (vd. màn monitor + hologram) dùng chung, không tải lại
 const bySrc = new Map();
-function getVideo(src) {
-    if (bySrc.has(src)) return bySrc.get(src);
+function getVideo(src, autoplay) {
+    if (bySrc.has(src)) {
+        const video = bySrc.get(src);
+        if (autoplay) setWanted(video, true);
+        return video;
+    }
     const video = document.createElement("video");
-    video.src = src;
     video.crossOrigin = "anonymous";
     video.loop = true;
     video.muted = true; // bắt buộc muted thì autoplay mới được phép
     video.playsInline = true;
-    video.autoplay = true;
-    video.addEventListener("canplay", () => {
-        video.play().catch((err) => console.warn(`Autoplay bị chặn (${src}):`, err));
-    });
+    video.preload = autoplay ? "auto" : "none";
+    video._wanted = autoplay;
+    video.src = src;
+    video.addEventListener("canplay", () => sync(video));
     videos.add(video);
     bySrc.set(src, video);
     return video;
+}
+
+function setWanted(video, on) {
+    if (video._wanted === on) return;
+    video._wanted = on;
+    if (on && video.preload === "none") video.preload = "auto";
+    sync(video);
+}
+
+/** Bật / tắt video của một texture (vd. hologram ẩn khi màn hình dọc → dừng giải mã). */
+export function setVideoWanted(texture, on) {
+    setWanted(texture.image, on);
+}
+
+/** Tạm dừng mọi video khi cảnh 3D không hiển thị (popup che kín). */
+export function suspendVideos(on) {
+    if (suspended === on) return;
+    suspended = on;
+    syncAll();
 }
 
 /**
@@ -37,9 +69,10 @@ function getVideo(src) {
  * @param {boolean} [opt.flipX] - lật ngang (khi UV bị ngược)
  * @param {boolean} [opt.flipY] - lật dọc
  * @param {string}  [opt.colorSpace] - mặc định sRGB
+ * @param {boolean} [opt.autoplay] - false: chưa tải / chưa phát cho tới khi setVideoWanted(texture, true)
  */
-export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace } = {}) {
-    const texture = new THREE.VideoTexture(getVideo(src));
+export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace, autoplay = true } = {}) {
+    const texture = new THREE.VideoTexture(getVideo(src, autoplay));
     texture.colorSpace = colorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;

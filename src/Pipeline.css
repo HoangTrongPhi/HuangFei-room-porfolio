@@ -328,6 +328,10 @@
 .pl-inspector-note { font-size: 13px; line-height: 1.5; color: var(--pp-text); }
 .pl-inspector-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; }
 
+/* Điện thoại: bỏ blur của quầng sáng dây (đắt khi kéo / zoom bản đồ), giữ bằng nét dày hơn */
+@media (max-width: 720px), (pointer: coarse) {
+    .pl-link.is-path .pl-link-glow { filter: none; opacity: 0.35; }
+}
 @media (max-width: 720px) {
     .pl-view { height: 52dvh; }
     .pl-footer { grid-template-columns: 1fr; }
