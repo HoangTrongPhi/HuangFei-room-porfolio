@@ -19,6 +19,9 @@ export function initLoader(renderer) {
 
 // url → { loaded, total, done } (byte)
 const files = new Map();
+// Dung lượng GLB đọc sẵn lúc build (vite.config.js): dùng khi server nén Brotli nên thiếu Content-Length
+const knownSizes = __MODEL_SIZES__;
+const LOAD_TIMEOUT = 120_000; // ms — đủ rộng cho mạng 3G chậm tải hết ~8MB
 const listeners = new Set();
 
 // Tính theo byte khi mọi file đều biết dung lượng; nếu không thì mỗi file chiếm phần bằng nhau
@@ -51,20 +54,30 @@ export function onLoadProgress(cb) {
 
 /** Load một file .glb và trả về scene gốc của nó. */
 export async function loadGLB(url) {
-    const file = { loaded: 0, total: 0, done: false };
+    const file = { loaded: 0, total: knownSizes[url] ?? 0, done: false };
     files.set(url, file);
     emit();
 
+    // Worker giải nén Draco / KTX2 lỗi (vd. bị CSP chặn) thì promise không bao giờ xong → hết giờ coi như lỗi
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Hết thời gian tải / giải nén: ${url}`)), LOAD_TIMEOUT);
+    });
     try {
-        const gltf = await gltfLoader.loadAsync(url, (e) => {
+        const gltf = await Promise.race([gltfLoader.loadAsync(url, (e) => {
+            // e.loaded đếm byte đã giải nén → so được với dung lượng file gốc
             file.loaded = e.loaded;
-            file.total = e.lengthComputable ? e.total : 0;
+            file.total = e.lengthComputable ? e.total : knownSizes[url] ?? 0;
             emit();
-        });
+        }), timeout]);
         const root = gltf.scene || gltf.scenes?.[0];
         if (!root) throw new Error(`GLB không có scene: ${url}`);
         return root;
+    } catch (err) {
+        file.failed = true;
+        throw err;
     } finally {
+        clearTimeout(timer);
         file.done = true; // lỗi cũng tính là xong để thanh loading không bị treo
         emit();
     }

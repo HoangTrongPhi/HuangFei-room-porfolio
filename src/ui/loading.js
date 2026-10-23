@@ -73,8 +73,9 @@ export function initLoadingScreen(ready, { name, role, visitor, onEnter }) {
                 line = { status, size };
                 lines.set(f.url, line);
             }
-            line.status.textContent = f.done ? "✓" : SPINNER[frame % SPINNER.length];
-            line.status.classList.toggle("is-done", f.done);
+            line.status.textContent = f.failed ? "✗" : f.done ? "✓" : SPINNER[frame % SPINNER.length];
+            line.status.classList.toggle("is-done", f.done && !f.failed);
+            line.status.classList.toggle("is-failed", !!f.failed);
             line.size.textContent = f.total ? formatSize(f.done ? f.total : f.loaded) : "";
         });
     }, 80);

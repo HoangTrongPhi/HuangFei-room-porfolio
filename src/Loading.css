@@ -155,6 +155,7 @@
 .loading-log li { display: flex; gap: 8px; }
 .log-status { width: 1ch; color: #ffd166; }
 .log-status.is-done { color: #4be3a4; }
+.log-status.is-failed { color: #ff6b8a; }
 .log-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log-size { color: #45648c; }
 .log-ready .log-name { color: var(--ld-soft); }
