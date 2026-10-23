@@ -30,6 +30,9 @@ import { getVisitorName, showWelcome } from "./ui/welcome.js";
 import { createBloom } from "./core/bloom.js";
 import { playIntro } from "./core/intro.js";
 import { createCameraFocus } from "./core/cameraFocus.js";
+import { createCleanerRobot } from "./core/cleanerRobot.js";
+import { createRoomMotion } from "./core/roomMotion.js";
+import { createKeyboardFx } from "./core/keyboardFx.js";
 import { createInteractions } from "./core/interactions.js";
 import { createAudioLevel } from "./core/audioLevel.js";
 import { createHotspots } from "./ui/hotspots.js";
@@ -111,6 +114,9 @@ const CONFIG = {
         switch: { label: "Play", popup: "arcade", view: [1, 0.35, 0.2] }, // máy Switch trên kệ dưới màn hình
         // Loa Divoom: chọn hình màn pixel; fill nhỏ → camera đứng xa hơn, vẫn thấy bối cảnh quanh loa
         divoom: { label: "Pixel", popup: "pixel", view: [1, 0.3, 0.1], fill: 0.3 },
+        // Bấm được nhưng không có chấm hotspot (đỡ rối): kệ chứng chỉ + sách trên tường, poster
+        shelf: { label: "Skills", popup: "about", view: [0.2, 0.15, 1], fill: 0.5 },
+        poster: { label: "Artwork", popup: "work", view: [0.1, 0.05, 1], fill: 0.6 },
     },
     // Màn hình hologram chiếu video dự án (WORK có video), lơ lửng hai bên phòng — toạ độ thế giới (mét)
     holograms: {
@@ -166,6 +172,7 @@ interactions.setEnabled(false); // bật sau khi intro xong
 let hotspots = null;
 let holograms = null;
 let pixel = null; // màn pixel loa Divoom
+let roomLife = null; // robot hút bụi, ghế/cây chuyển động, bàn phím — chạy sau intro
 const particles = createParticles(
     scene,
     new THREE.Box3(new THREE.Vector3(...CONFIG.particles.min), new THREE.Vector3(...CONFIG.particles.max)),
@@ -202,6 +209,7 @@ initLoadingScreen(ready, {
         // Lắp ráp căn phòng; xong thì hiện HUD, hotspot, cho phép tương tác
         playIntro({ scene, camera, controls, renderer, bloom, reduced: prefersReducedMotion() }).then(() => {
             introDone = true;
+            roomLife?.start();
             holograms?.reveal();
             particles.show();
             roomControl.show();
@@ -270,6 +278,31 @@ ready.then(async () => {
     if (casePC) interactions.register("casePC", meshesOf(casePC.root), () => visit("casePC", objects.casePC));
     if (objects.switch?.length) interactions.register("switch", objects.switch, () => visit("switch", objects.switch));
 
+    if (room) {
+        const robot = createCleanerRobot(room);
+        const motion = createRoomMotion(room);
+        const keyboard = room.getObjectByName("Keyboard");
+        const keyboardFx = keyboard && createKeyboardFx(keyboard);
+        updaters.push(motion.update);
+        roomLife = {
+            start() {
+                const reduced = prefersReducedMotion();
+                if (!reduced) robot?.start();
+                motion.start({ reduced });
+                keyboardFx?.setEnabled(true);
+            },
+        };
+        if (introDone) roomLife.start();
+
+        // Ghế: bấm → xoay một vòng. Kệ chứng chỉ/sách và poster: bay camera tới rồi mở popup như hotspot
+        if (motion.chairMeshes.length) interactions.register("chair", motion.chairMeshes, () => motion.spinChair());
+        const byName = (names) => names.map((n) => room.getObjectByName(n)).filter(Boolean);
+        const shelf = byName(["Certificate", "Book_02", "Book_05", "Book_07"]);
+        const poster = byName(["Poster"]);
+        if (shelf.length) interactions.register("shelf", shelf, () => visit("shelf", shelf));
+        if (poster.length) interactions.register("poster", poster, () => visit("poster", poster));
+    }
+
     const displayMesh = room?.getObjectByName("Display");
     if (displayMesh) {
         pixel = createPixelDisplay(displayMesh, { getBands: () => audioLevel?.getBands() });
@@ -306,7 +339,7 @@ ready.then(async () => {
     });
 });
 
-if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap, renderer }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
+if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap, renderer, updaters }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
 
 // ===== Render loop =====
 // Bloom phải render cả cảnh thêm 1 lần mỗi frame → tắt trên điện thoại cho mượt
