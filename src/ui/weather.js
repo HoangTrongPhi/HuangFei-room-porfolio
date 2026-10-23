@@ -152,15 +152,22 @@ export function createWeather(place) {
         ictx.restore();
     }
 
+    // Icon chỉ cần ~30fps; panel bị CSS ẩn trên màn hẹp (View_UI.css) hoặc tab ẩn → dừng hẳn vòng vẽ
+    const ICON_FPS = 30;
+    const narrow = window.matchMedia("(max-width: 720px)");
+    let last = 0;
     function loop(now) {
-        drawIcon(now / 1000);
         raf = requestAnimationFrame(loop);
+        if (now - last < 1000 / ICON_FPS - 1) return;
+        last = now;
+        drawIcon(now / 1000);
     }
-    // Chỉ chạy animation khi tab đang hiển thị
-    document.addEventListener("visibilitychange", () => {
+    function syncLoop() {
         cancelAnimationFrame(raf);
-        if (started && !document.hidden) raf = requestAnimationFrame(loop);
-    });
+        if (started && !document.hidden && !narrow.matches) raf = requestAnimationFrame(loop);
+    }
+    document.addEventListener("visibilitychange", syncLoop);
+    narrow.addEventListener("change", syncLoop);
 
     // ===== Biểu đồ 12 giờ =====
     function drawChart(times, temps, rain) {
@@ -246,7 +253,7 @@ export function createWeather(place) {
             started = true;
             refresh();
             setInterval(refresh, REFRESH_MS);
-            raf = requestAnimationFrame(loop);
+            syncLoop();
             gsap.from(panel, { y: 20, opacity: 0, duration: 0.6, delay: 0.25, ease: "power3.out", clearProps: "transform,opacity" });
         },
     };

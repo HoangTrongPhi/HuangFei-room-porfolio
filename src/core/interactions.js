@@ -21,7 +21,7 @@ export function setPointer(domElement, owner, active) {
 export function createInteractions(camera, domElement) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const targets = []; // { id, meshes, glow, onClick }
+    const targets = []; // { id, meshes, glow, overlays, onClick }
     const hoverListeners = new Set();
     let hovered = null;
     let down = null;
@@ -46,14 +46,16 @@ export function createInteractions(camera, domElement) {
             polygonOffsetUnits: -1,
             toneMapped: false,
         });
-        meshes.forEach((mesh) => {
-            if (!useGlow) return;
+        // Lớp phủ chỉ hiện (visible) khi đang hover: opacity 0 vẫn tốn 1 draw call + blend mỗi frame
+        const overlays = useGlow ? meshes.map((mesh) => {
             const overlay = new THREE.Mesh(mesh.geometry, glow);
+            overlay.visible = false;
             overlay.userData.skipIntro = true;
             overlay.raycast = () => {}; // không chặn raycast của mesh gốc
             mesh.add(overlay);
-        });
-        targets.push({ id, meshes, glow, onClick });
+            return overlay;
+        }) : [];
+        targets.push({ id, meshes, glow, overlays, onClick });
     }
 
     function pick(event) {
@@ -67,14 +69,20 @@ export function createInteractions(camera, domElement) {
 
     function setHovered(target) {
         if (target === hovered) return;
-        if (hovered) gsap.to(hovered.glow, { opacity: 0, duration: 0.3, overwrite: true });
+        if (hovered) {
+            const prev = hovered;
+            gsap.to(prev.glow, { opacity: 0, duration: 0.3, overwrite: true, onComplete: () => showOverlays(prev, false) });
+        }
         if (target) {
+            showOverlays(target, true);
             gsap.fromTo(target.glow, { opacity: 0.12 }, { opacity: 0.28, duration: 0.6, repeat: -1, yoyo: true, ease: "sine.inOut", overwrite: true });
         }
         hovered = target;
         setPointer(domElement, "interactions", !!target);
         hoverListeners.forEach((cb) => cb(target?.id ?? null));
     }
+
+    const showOverlays = (target, on) => target.overlays.forEach((o) => { o.visible = on; });
 
     domElement.addEventListener("pointermove", (e) => {
         if (enabled && e.pointerType !== "touch") setHovered(pick(e));

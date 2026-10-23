@@ -1,9 +1,12 @@
 // core/models.js
 import * as THREE from "three";
-import { loadGLB } from "./loader.js";
+import { loadGLB, liteMaterials } from "./loader.js";
 
 // room_portfolio.glb được export ở đơn vị cm → thu về mét
 const ROOM_SCALE = 0.01;
+// Vật liệu nhẹ (Lambert) không nhận ánh sáng từ env map → bù bằng ambient.
+// 2.0: đo độ sáng trung bình khung hình khớp bản PBR (~61/255) ở góc nhìn mặc định
+const LITE_AMBIENT = 2.0;
 
 /** Load phòng chính (room_portfolio.glb) và thêm vào scene. */
 export async function loadSceneModel(scene) {
@@ -26,6 +29,7 @@ export async function loadSceneModel(scene) {
         dir.position.set(3, 4, 2);
         scene.add(ambient, dir);
     }
+    if (liteMaterials) scene.add(new THREE.AmbientLight(0xffffff, LITE_AMBIENT));
 
     const poster = root.getObjectByName("Poster");
     if (poster) fixFrameInnerWalls(poster);

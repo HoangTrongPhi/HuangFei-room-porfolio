@@ -63,6 +63,15 @@ export function suspendVideos(on) {
     syncAll();
 }
 
+// Chỉ tải metadata, tua tới 0.5s rồi đẩy đúng khung hình đó lên GPU (video dừng thì VideoTexture không tự cập nhật)
+function showStillFrame(video, texture) {
+    if (video.preload === "none") video.preload = "metadata";
+    const seek = () => { video.currentTime = Math.min(0.5, (video.duration || 1) / 2); };
+    if (video.readyState >= video.HAVE_METADATA) seek();
+    else video.addEventListener("loadedmetadata", seek, { once: true });
+    video.addEventListener("seeked", () => { texture.needsUpdate = true; }, { once: true });
+}
+
 /**
  * @param {string} src - đường dẫn video (trong /public)
  * @param {object} [opt]
@@ -70,9 +79,12 @@ export function suspendVideos(on) {
  * @param {boolean} [opt.flipY] - lật dọc
  * @param {string}  [opt.colorSpace] - mặc định sRGB
  * @param {boolean} [opt.autoplay] - false: chưa tải / chưa phát cho tới khi setVideoWanted(texture, true)
+ * @param {boolean} [opt.still] - chỉ hiện 1 khung hình tĩnh, không phát (điện thoại: đỡ giải mã + đẩy texture mỗi frame)
  */
-export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace, autoplay = true } = {}) {
-    const texture = new THREE.VideoTexture(getVideo(src, autoplay));
+export function createVideoTexture(src, { flipX = false, flipY = false, colorSpace = THREE.SRGBColorSpace, autoplay = true, still = false } = {}) {
+    const video = getVideo(src, autoplay && !still);
+    const texture = new THREE.VideoTexture(video);
+    if (still) showStillFrame(video, texture);
     texture.colorSpace = colorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;

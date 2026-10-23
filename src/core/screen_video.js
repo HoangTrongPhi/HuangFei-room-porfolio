@@ -9,9 +9,10 @@ import { createVideoTexture } from "./video.js";
  * @param {string} path - đường dẫn Monitor.glb
  * @param {Object<string,string>} videoPaths - { tên mesh màn hình: đường dẫn video }
  * @param {Object<string,{flipX:boolean, flipY:boolean}>} flips - lật video theo từng màn
+ * @param {string[]} [liveScreens] - chỉ các màn này phát video, màn khác hiện khung hình tĩnh (mặc định: tất cả phát)
  * @returns {Promise<{root: THREE.Object3D, screens: object}>}
  */
-export async function loadMonitorScreens(scene, path, videoPaths, flips = {}) {
+export async function loadMonitorScreens(scene, path, videoPaths, flips = {}, liveScreens = null) {
     const monitor = await loadGLB(path);
 
     const meshes = {};
@@ -22,7 +23,7 @@ export async function loadMonitorScreens(scene, path, videoPaths, flips = {}) {
         // MeshBasicMaterial + toneMapped:false: màn hình tự phát sáng,
         // không bị đèn và exposure của scene làm cháy màu
         child.material = new THREE.MeshBasicMaterial({
-            map: createVideoTexture(src, flips[child.name]),
+            map: createVideoTexture(src, { ...flips[child.name], still: liveScreens ? !liveScreens.includes(child.name) : false }),
             toneMapped: false,
         });
         meshes[child.name] = child;

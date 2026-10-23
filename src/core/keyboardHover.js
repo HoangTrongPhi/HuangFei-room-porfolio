@@ -70,6 +70,7 @@ export function createKeyboardHover(keyboard, camera, domElement) {
     overlay.userData.skipIntro = true;
     overlay.raycast = () => {}; // không chặn raycast của các tương tác khác
     overlay.renderOrder = 2;
+    overlay.visible = false;
     keyboard.add(overlay);
 
     const raycaster = new THREE.Raycaster();
@@ -104,7 +105,12 @@ export function createKeyboardHover(keyboard, camera, domElement) {
             if (enabled && pending) hovered = pick(pending);
             pending = null;
             const k = Math.exp(-FADE * delta);
-            for (let i = 0; i < levels.length; i++) levels[i] = i === hovered ? 1 : levels[i] * k;
+            let lit = false;
+            for (let i = 0; i < levels.length; i++) {
+                levels[i] = i === hovered ? 1 : levels[i] * k;
+                if (levels[i] > 0.004) lit = true;
+            }
+            overlay.visible = lit; // không phím nào sáng → khỏi vẽ thêm cả bàn phím một lần nữa
             material.uniforms.uColor.value.copy(roomFx.accent).multiplyScalar(GLOW);
         },
     };

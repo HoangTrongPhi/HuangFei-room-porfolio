@@ -10,8 +10,10 @@ import * as THREE from "three";
 import gsap from "gsap";
 
 import { createRenderer } from "./core/renderer.js";
-import { isMobile } from "./core/device.js";
+import { isMobile, canHover } from "./core/device.js";
 import { createAdaptiveQuality } from "./core/adaptiveQuality.js";
+import { liteMaterials } from "./core/loader.js";
+import { createDebugStats } from "./ui/debugStats.js";
 import { suspendVideos } from "./core/video.js";
 import { createCamera } from "./core/camera.js";
 import { loadSceneModel } from "./core/models.js";
@@ -87,6 +89,8 @@ const CONFIG = {
             Screen_02: "/media/monitor_2.mp4",
             Screen_03: "/media/monitor_3.mp4",
         },
+        // Điện thoại: chỉ 1 màn phát video, 2 màn còn lại hiện khung hình tĩnh (giải mã video rất tốn)
+        mobileLive: ["Screen_02"],
         flips: {
             Screen_01: { flipX: false, flipY: true },
             Screen_02: { flipX: false, flipY: true },
@@ -157,7 +161,8 @@ const tasks = {
     room: loadSceneModel(scene),
     casePC: loadCasePC(scene, CONFIG.casePC).then((pc) => { updaters.push(pc.update); return pc; }),
     rgbLeds: loadRGBleds(scene).then((update) => updaters.push(update)),
-    monitor: loadMonitorScreens(scene, CONFIG.monitor.model, CONFIG.monitor.videos, CONFIG.monitor.flips),
+    monitor: loadMonitorScreens(scene, CONFIG.monitor.model, CONFIG.monitor.videos, CONFIG.monitor.flips,
+        isMobile ? CONFIG.monitor.mobileLive : null),
     social: loadSocialLinks(scene, CONFIG.social.model, CONFIG.social.links)
         .then((social) => { social.setupInteractions(camera, canvas); return social; }),
 };
@@ -296,7 +301,8 @@ ready.then(async () => {
         const robot = createCleanerRobot(room);
         const motion = createRoomMotion(room);
         const keyboard = room.getObjectByName("Keyboard");
-        const keyboardHover = keyboard && createKeyboardHover(keyboard, camera, canvas);
+        // Màn cảm ứng không có hover → không tạo lớp sáng bàn phím
+        const keyboardHover = keyboard && canHover ? createKeyboardHover(keyboard, camera, canvas) : null;
         updaters.push(motion.update);
         if (keyboardHover) updaters.push(keyboardHover.update);
         roomLife = {
@@ -366,10 +372,22 @@ const bloom = CONFIG.bloom.enabled && !isMobile ? createBloom(renderer, CONFIG.b
 const roomControl = createRoomControl({ renderer, bloom, particles });
 const timer = new THREE.Timer();
 timer.connect(document); // tạm dừng khi tab bị ẩn để delta không nhảy vọt lúc quay lại
-// Máy yếu (nhất là điện thoại) → tự hạ độ phân giải render cho giữ FPS
-const quality = createAdaptiveQuality(renderer, (ratio) => particles.setPixelRatio(ratio));
-renderer.setAnimationLoop(() => {
-    // Không truyền timestamp của rAF: nó có thể sớm hơn lúc tạo timer → delta âm ở frame đầu
+// Máy yếu (nhất là điện thoại) → tự hạ độ phân giải render, rồi khoá 30fps nếu vẫn chậm
+const stats = createDebugStats(); // ?debug → bảng FPS / draw call để đo trên điện thoại thật
+stats?.set("mat", liteMaterials ? "lambert (lite)" : "pbr");
+const quality = createAdaptiveQuality(renderer, ({ pixelRatio, fpsCap }) => {
+    particles.setPixelRatio(pixelRatio);
+    stats?.set("ratio", String(pixelRatio));
+    stats?.set("cap", fpsCap ? `${fpsCap} fps` : "off");
+});
+stats?.set("ratio", String(quality.pixelRatio));
+stats?.set("cap", "off");
+let lastFrame = 0;
+renderer.setAnimationLoop((now) => {
+    // Đang khoá FPS (máy yếu): bỏ qua khung hình tới sớm (-2ms bù sai số lịch rAF 60Hz)
+    if (quality.fpsCap && now - lastFrame < 1000 / quality.fpsCap - 2) return;
+    lastFrame = now;
+    // Timestamp của rAF chỉ dùng để khoá FPS; không truyền cho timer (có thể sớm hơn lúc tạo timer → delta âm ở frame đầu)
     timer.update();
     const delta = timer.getDelta();
     const level = audioLevel?.getLevel() ?? 0; // độ lớn nhạc 0 → 1 cho LED
@@ -384,6 +402,7 @@ renderer.setAnimationLoop(() => {
     pixel?.update(delta);
     controls.update(); // cần gọi mỗi frame vì bật damping
     renderer.render(scene, camera);
+    stats?.frame(delta, renderer.info);
     bloom?.render(scene, camera);
     hotspots?.update();
     holograms?.update(delta, camera);

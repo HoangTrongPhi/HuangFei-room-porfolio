@@ -7,6 +7,8 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+import { isMobile } from "./device.js";
+import { useLiteMaterials, applyLiteMaterials } from "./liteMaterials.js";
 
 const dracoLoader = new DRACOLoader().setDecoderPath("/draco/");
 const ktx2Loader = new KTX2Loader().setTranscoderPath("/basis/");
@@ -21,6 +23,7 @@ export function initLoader(renderer) {
 const files = new Map();
 // Dung lượng GLB đọc sẵn lúc build (vite.config.js): dùng khi server nén Brotli nên thiếu Content-Length
 const knownSizes = __MODEL_SIZES__;
+export const liteMaterials = useLiteMaterials(isMobile); // điện thoại: PBR → Lambert ngay khi tải, trước khi module khác giữ tham chiếu vật liệu
 const LOAD_TIMEOUT = 120_000; // ms — đủ rộng cho mạng 3G chậm tải hết ~8MB
 const listeners = new Set();
 
@@ -72,6 +75,7 @@ export async function loadGLB(url) {
         }), timeout]);
         const root = gltf.scene || gltf.scenes?.[0];
         if (!root) throw new Error(`GLB không có scene: ${url}`);
+        if (liteMaterials) applyLiteMaterials(root);
         return root;
     } catch (err) {
         file.failed = true;
