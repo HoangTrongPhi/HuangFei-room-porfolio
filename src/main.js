@@ -4,6 +4,7 @@ import "./View_UI.css";
 import "./Loading.css";
 import "./Popup.css";
 import "./Arcade.css";
+import "./Pipeline.css";
 
 import * as THREE from "three";
 import gsap from "gsap";
@@ -25,6 +26,7 @@ import { createWorkPopup } from "./ui/popups/work.js";
 import { createAboutPopup } from "./ui/popups/about.js";
 import { createContactPopup } from "./ui/popups/contact.js";
 import { createHobbyPopup } from "./ui/popups/hobby.js";
+import { createPipelinePopup } from "./ui/popups/pipeline.js";
 import { createArcade } from "./ui/arcade/console.js";
 import { setMutedSource } from "./ui/arcade/sfx.js";
 import { getVisitorName, showWelcome } from "./ui/welcome.js";
@@ -47,7 +49,7 @@ import { createPixelPopup } from "./ui/popups/pixel.js";
 import { createIdleHint } from "./ui/idleHint.js";
 import { prefersReducedMotion } from "./ui/dom.js";
 import { track } from "./core/analytics.js";
-import { PROFILE, LINKS, WORK, ABOUT, CONTACT, HOBBY, REF_NAMES, WEATHER } from "./content.js";
+import { PROFILE, LINKS, WORK, ABOUT, CONTACT, HOBBY, PIPELINE, REF_NAMES, WEATHER } from "./content.js";
 
 // ================== CONFIG ==================
 const CONFIG = {
@@ -118,6 +120,7 @@ const CONFIG = {
         // Bấm được nhưng không có chấm hotspot (đỡ rối): kệ chứng chỉ + sách trên tường, poster
         shelf: { label: "Skills", popup: "about", view: [0.2, 0.15, 1], fill: 0.5 },
         poster: { label: "Hobby", popup: "hobby", view: [0.1, 0.05, 1], fill: 0.6 }, // poster game → catalog game hay chơi
+        books: { label: "Skill tree", popup: "pipeline", view: [0.35, 0.6, 1], fill: 0.45 }, // chồng sách trên hộp dưới bàn → cây kỹ năng pipeline
     },
     // Màn hình hologram chiếu video dự án (WORK có video), lơ lửng hai bên phòng — toạ độ thế giới (mét)
     holograms: {
@@ -229,6 +232,7 @@ const workPopup = createWorkPopup(WORK, LINKS.portfolioPdf);
 createAboutPopup(PROFILE, ABOUT, LINKS.cv);
 createContactPopup(PROFILE, CONTACT, LINKS);
 createHobbyPopup(HOBBY);
+createPipelinePopup(PIPELINE);
 createArcade();
 setMutedSource(() => bgMusic?.muted ?? false); // tắt nhạc ở HUD thì mini game cũng im
 const menu = initMenu({
@@ -276,12 +280,15 @@ ready.then(async () => {
         switch: room && ["Screen", "Dock", "Left_ctrl", "Right_ctrl"].map((n) => room.getObjectByName(n)).filter(Boolean),
         // Loa Divoom (Ditoo): thân, màn pixel, núm, các phím cơ
         divoom: room && meshesOf(room).filter((m) => ["Body", "Display", "Control"].includes(m.name) || m.name.startsWith("key_cap")),
+        // Chồng sách trên 2 hộp dưới bàn (sách trên kệ tường thuộc spot "shelf")
+        books: room && ["Book_01", "Book_03", "Book_06"].map((n) => room.getObjectByName(n)).filter(Boolean),
     };
 
     // Logo mạng xã hội đã có hover/click riêng (mở link) nên chỉ gắn hotspot, không đăng ký tương tác
     if (monitor) interactions.register("monitor", meshesOf(monitor.root), () => visit("monitor", objects.monitor));
     if (casePC) interactions.register("casePC", meshesOf(casePC.root), () => visit("casePC", objects.casePC));
     if (objects.switch?.length) interactions.register("switch", objects.switch, () => visit("switch", objects.switch));
+    if (objects.books?.length) interactions.register("books", objects.books, () => visit("books", objects.books));
 
     if (room) {
         const robot = createCleanerRobot(room);
@@ -293,7 +300,8 @@ ready.then(async () => {
         roomLife = {
             start() {
                 const reduced = prefersReducedMotion();
-                if (!reduced) robot?.start();
+                if (reduced) robot?.setAuto(false); // giảm chuyển động: robot chỉ chạy khi bấm Clean
+                robot?.start();
                 motion.start({ reduced });
                 keyboardHover?.setEnabled(true);
             },
@@ -301,6 +309,7 @@ ready.then(async () => {
             setInteractive: (value) => keyboardHover?.setEnabled(value),
         };
         if (introDone) roomLife.start();
+        if (robot) roomControl.attachRobot(robot);
 
         // Ghế: bấm → xoay một vòng. Kệ chứng chỉ/sách và poster: bay camera tới rồi mở popup như hotspot
         if (motion.chairMeshes.length) interactions.register("chair", motion.chairMeshes, () => motion.spinChair());

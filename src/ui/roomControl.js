@@ -1,6 +1,6 @@
 // ui/roomControl.js
 // Bảng điều khiển căn phòng (góc phải trên): màu LED, độ sáng phòng, độ phát sáng (bloom),
-// Party mode, bật/tắt hạt sáng (mặc định tắt), chọn hình màn pixel của loa Divoom.
+// Party mode, bật/tắt hạt sáng (mặc định tắt), chọn hình màn pixel của loa Divoom, điều khiển robot hút bụi.
 // Ghi vào roomFx (LED/hạt sáng đọc mỗi frame) và chỉnh trực tiếp renderer/bloom.
 import * as THREE from "three";
 import gsap from "gsap";
@@ -118,6 +118,41 @@ export function createRoomControl({ renderer, bloom, particles }) {
         track("click", `pixel-${pixel?.current.id}`);
     }
 
+    // ----- Robot hút bụi (gắn sau khi model phòng tải xong: attachRobot) -----
+    let robot = null;
+    const ROBOT_STATUS = { docked: "Docked", cleaning: "Cleaning", returning: "Going home" };
+    const SPEEDS = [1, 2, 4];
+    const robotStatus = h("output", { class: "rc-robot-status" }, "—");
+    const robotPlay = h("button", { type: "button", class: "rc-btn", onClick: () => {
+        const s = robot?.state;
+        if (!s) return;
+        if (s.status !== "docked" && !s.paused) robot.api.pause();
+        else robot.api.clean();
+        track("click", "robot-play");
+    } }, "▶ Clean");
+    const robotHome = h("button", { type: "button", class: "rc-btn", "aria-label": "Send robot back to dock", onClick: () => { robot?.api.goHome(); track("click", "robot-dock"); } }, "⌂ Dock");
+    const robotSpeed = h("button", { type: "button", class: "rc-btn rc-btn--speed", "aria-label": "Robot speed", onClick: () => {
+        if (!robot) return;
+        robot.api.setSpeed(SPEEDS[(SPEEDS.indexOf(robot.state.speed) + 1) % SPEEDS.length]);
+    } }, "1×");
+    const robotAuto = toggle("Auto clean", (on) => { robot?.api.setAuto(on); track("click", `robot-auto-${on ? "on" : "off"}`); });
+    const robotRow = h("div", { class: "rc-row rc-robot", hidden: true },
+        h("div", { class: "rc-robot-head" }, h("span", { class: "rc-label" }, "Robot"), robotStatus),
+        h("div", { class: "rc-robot-btns" }, robotPlay, robotHome, robotSpeed),
+        robotAuto,
+    );
+    function renderRobot(s) {
+        robot.state = s;
+        const moving = s.status !== "docked";
+        robotStatus.textContent = s.paused ? "Paused" : ROBOT_STATUS[s.status];
+        robotStatus.dataset.status = s.paused ? "paused" : s.status;
+        robotPlay.textContent = moving && !s.paused ? "❚❚ Pause" : moving ? "▶ Resume" : "▶ Clean";
+        robotHome.disabled = !moving || (s.status === "returning" && !s.paused);
+        robotSpeed.textContent = `${s.speed}×`;
+        robotAuto.setAttribute("aria-checked", String(s.auto));
+        robotAuto.classList.toggle("is-on", s.auto);
+    }
+
     // ----- Khung + thu gọn -----
     const content = h("div", { class: "rc-body", id: "rc-body" },
         h("div", { class: "rc-row" }, h("span", { class: "rc-label" }, "LED"), h("div", { class: "rc-swatches" }, swatches, custom)),
@@ -125,6 +160,7 @@ export function createRoomControl({ renderer, bloom, particles }) {
         glow.el,
         ledLevel.el,
         pixelRow,
+        robotRow,
         h("div", { class: "rc-row rc-toggles" }, party, sparkles),
         h("div", { class: "rc-row rc-row--end" }, reset),
     );
@@ -156,6 +192,12 @@ export function createRoomControl({ renderer, bloom, particles }) {
             pixelRow.hidden = false;
             pixelName.textContent = display.current.name;
             display.onChange((preset) => { pixelName.textContent = preset.name; });
+        },
+        /** Hiện nhóm điều khiển robot hút bụi */
+        attachRobot(api) {
+            robot = { api, state: null };
+            robotRow.hidden = false;
+            api.onChange(renderRobot);
         },
         show() {
             gsap.from(panel, { x: 30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform,opacity" });

@@ -247,6 +247,76 @@ export const ABOUT = {
 };
 
 /**
+ * Cây kỹ năng theo pipeline làm game — popup PIPELINE (bấm chồng sách trên hộp dưới bàn).
+ * Đọc từ trái sang phải theo các giai đoạn (stages). Hai con đường Art (trên) và Code (dưới)
+ * gặp nhau ở làn giữa Tech Art — chỗ bạn đang đứng.
+ * nodes:
+ *   id    : chữ không dấu, duy nhất          lane : "art" | "tech" | "code"
+ *   col   : cột giai đoạn 1 → 6 (0 = gốc)     row  : 0–1 làn Art, 2 làn Tech Art, 3–4 làn Code
+ *   level / max : điểm đã nâng (level = max → MASTERED vàng, 0 → khoá)
+ *   from  : id các node đi trước (nối dây). Dây giữa hai làn khác nhau = nhánh giao thoa (nét đứt)
+ *   icon  : 1–3 ký tự hiện trong node · note : mô tả · tools : tag công cụ
+ * classes: 3 "nghề" ở cuối mỗi con đường; current = vị trí hiện tại; from = node dẫn tới
+ */
+export const PIPELINE = {
+    // TODO: chỉnh level / note theo cảm nhận của bạn
+    intro: "Game dev pipeline, left → right. Two roads — Art and Code — cross in the middle lane: Technical Art. That's where I live.",
+    stages: ["Pre-prod", "Production", "Look-dev", "Integration", "Optimize", "Ship & Live"],
+    focus: [3, 5], // các cột bạn mạnh nhất (tô sáng trên thanh giai đoạn)
+    lanes: {
+        art: { label: "Art", color: "#ff6bd6" },
+        tech: { label: "Tech Art", color: "#66e0ff" },
+        code: { label: "Code", color: "#7cf0c5" },
+    },
+    nodes: [
+        { id: "core", lane: "tech", col: 0, row: 2, level: 1, max: 1, icon: "HP", label: "Phi", note: "Fine Arts foundation + engineering mindset." },
+
+        // ---- Art: nhánh 2D / nhân vật (hàng 0) ----
+        { id: "concept", lane: "art", col: 1, row: 0, level: 3, max: 5, icon: "✎", label: "Concept & 2D", from: ["core"], note: "Visual art foundation, paint-overs, mood boards.", tools: ["Photoshop", "Illustrator"] },
+        { id: "sculpt", lane: "art", col: 3, row: 0, level: 3, max: 5, icon: "◐", label: "Sculpt", from: ["concept"], note: "High-poly sculpt for props and organic shapes.", tools: ["ZBrush", "Blender"] },
+        { id: "rig", lane: "art", col: 4, row: 0, level: 2, max: 5, icon: "⟡", label: "Rig & Anim", from: ["sculpt"], note: "Basic rigging, mocap clean-up, 2D skeletal animation.", tools: ["Cascadeur", "Mixamo", "Spine 2D"] },
+        { id: "cine", lane: "art", col: 5, row: 0, level: 3, max: 5, icon: "▶", label: "Cinematic", from: ["rig"], note: "UE5 cinematic series for YouTube (Line Century).", tools: ["Sequencer", "DaVinci Resolve", "After Effects"] },
+        { id: "artdir", lane: "art", col: 6, row: 0, level: 0, max: 5, icon: "♛", label: "Art Direction", from: ["cine", "render"], note: "Next goal: owning the visual target of a project." },
+
+        // ---- Art: nhánh 3D môi trường (hàng 1) ----
+        { id: "blockout", lane: "art", col: 1, row: 1, level: 3, max: 5, icon: "▢", label: "Blockout", from: ["core"], note: "Greybox, scale and composition before final art.", tools: ["Maya", "UE Modeling"] },
+        { id: "model", lane: "art", col: 2, row: 1, level: 5, max: 5, icon: "◆", label: "Modeling", from: ["blockout"], note: "Low / mid / high poly, hard-surface and props for AAA.", tools: ["Maya", "Blender"] },
+        { id: "texture", lane: "art", col: 3, row: 1, level: 5, max: 5, icon: "▦", label: "PBR Texture", from: ["model"], note: "Procedural and hand-crafted PBR, tiling materials.", tools: ["Substance Painter", "Substance Designer"] },
+        { id: "env", lane: "art", col: 4, row: 1, level: 5, max: 5, icon: "▲", label: "Environment", from: ["texture"], note: "Modular kits, foliage and terrain — Lies of P, Caliverse.", tools: ["SpeedTree", "Gaea", "Marmoset"] },
+        { id: "vfx", lane: "art", col: 5, row: 1, level: 2, max: 5, icon: "✺", label: "VFX", from: ["env", "material"], note: "Real-time particles, simulated flipbooks, 2D VFX.", tools: ["Niagara", "EmberGen"] },
+        { id: "render", lane: "art", col: 6, row: 1, level: 4, max: 5, icon: "◉", label: "Showcase", from: ["vfx"], note: "Portfolio renders and presentation.", tools: ["Marmoset", "UE5 MRQ"] },
+
+        // ---- Tech Art: làn giữa, nơi Art và Code gặp nhau (hàng 2) ----
+        { id: "specs", lane: "tech", col: 1, row: 2, level: 4, max: 5, icon: "≡", label: "Tech Specs", from: ["core"], note: "Poly / texture budgets, texel density, naming rules.", tools: ["Docs", "Spreadsheets"] },
+        { id: "trim", lane: "tech", col: 2, row: 2, level: 4, max: 5, icon: "▤", label: "Trimsheet", from: ["specs", "model"], note: "Trimsheets and modular UV layouts for reuse.", tools: ["Maya", "Substance Designer"] },
+        { id: "material", lane: "tech", col: 3, row: 2, level: 5, max: 5, icon: "◈", label: "Material / Shader", from: ["trim", "texture"], note: "Master materials, material functions, custom shaders.", tools: ["Material Graph", "Shader Graph", "HLSL", "GLSL"] },
+        { id: "world", lane: "tech", col: 4, row: 2, level: 4, max: 5, icon: "⁂", label: "World Tech", from: ["material", "env", "dcc"], note: "PCG, procedural foliage, landscape, Lumen lighting.", tools: ["PCG", "HLOD", "Lumen"] },
+        { id: "optimize", lane: "tech", col: 5, row: 2, level: 5, max: 5, icon: "ϟ", label: "Optimization", from: ["world", "profile"], note: "Memory, draw calls, LOD / HLOD, texture streaming — milestone-ready builds.", tools: ["LOD", "Mipmap", "Draw calls"] },
+        { id: "xr", lane: "tech", col: 6, row: 2, level: 4, max: 5, icon: "◎", label: "XR & Platforms", from: ["optimize"], note: "Holding frame rate on VR/XR headsets, mobile and web.", tools: ["Meta Horizon", "Cocos", "Unity"] },
+
+        // ---- Code: nhánh tools / pipeline (hàng 3) ----
+        { id: "python", lane: "code", col: 2, row: 3, level: 4, max: 5, icon: "Py", label: "Python", from: ["core"], note: "Pipeline scripts and batch processing.", tools: ["Python"] },
+        { id: "dcc", lane: "code", col: 3, row: 3, level: 4, max: 5, icon: "⌘", label: "DCC Tools", from: ["python"], note: "Maya / Blender add-ons that save artists time.", tools: ["Maya API", "Blender API"] },
+        { id: "assetpipe", lane: "code", col: 4, row: 3, level: 4, max: 5, icon: "⇄", label: "Asset Pipeline", from: ["dcc"], note: "Export, validation and version control for art assets.", tools: ["Git", "Perforce"] },
+        { id: "aigen", lane: "code", col: 5, row: 3, level: 3, max: 5, icon: "✦", label: "AI Gen", from: ["assetpipe"], note: "Stable Diffusion asset pipeline R&D (Kidmo).", tools: ["Stable Diffusion", "ComfyUI", "LoRA"] },
+        { id: "web", lane: "code", col: 6, row: 3, level: 3, max: 5, icon: "</>", label: "Web 3D", from: ["aigen"], note: "This room — Three.js, baked lighting, custom shaders.", tools: ["Three.js", "Vite"] },
+
+        // ---- Code: nhánh gameplay / engine (hàng 4) ----
+        { id: "proto", lane: "code", col: 1, row: 4, level: 4, max: 5, icon: "▣", label: "Prototype", from: ["core"], note: "Minimap, pickup, inventory, HUD prototypes.", tools: ["Blueprint"] },
+        { id: "cpp", lane: "code", col: 2, row: 4, level: 4, max: 5, icon: "C++", label: "C++ / C#", from: ["proto"], note: "Unreal gameplay classes, Unity scripting.", tools: ["C++", "C#", "Rider"] },
+        { id: "gameplay", lane: "code", col: 3, row: 4, level: 3, max: 5, icon: "⚑", label: "Gameplay", from: ["cpp"], note: "Game Mode / State, Pawn, Actor, GAS.", tools: ["GAS", "Gameplay Framework"] },
+        { id: "behavior", lane: "code", col: 4, row: 4, level: 3, max: 5, icon: "⌬", label: "AI Behavior", from: ["gameplay"], note: "Behavior Trees, Blackboard, State Tree, EQS.", tools: ["State Tree", "EQS"] },
+        { id: "profile", lane: "code", col: 5, row: 4, level: 3, max: 5, icon: "◔", label: "Profiling", from: ["behavior"], note: "Finding the real bottleneck before optimizing.", tools: ["Unreal Insights", "RenderDoc"] },
+        { id: "engine", lane: "code", col: 6, row: 4, level: 1, max: 5, icon: "⚙", label: "Engine & Render", from: ["profile", "xr"], note: "Next goal: custom render passes and engine plugins.", tools: ["UE Plugins", "RDG"] },
+    ],
+    classes: [
+        { id: "art", lane: "art", row: 0.5, title: "Environment Artist", from: ["artdir", "render"] },
+        { id: "tech", lane: "tech", row: 2, title: "Technical Artist", from: ["xr"], current: true, next: "Next: Lead Technical Artist" },
+        { id: "code", lane: "code", row: 3.5, title: "Tools Programmer", from: ["web", "engine"] },
+    ],
+};
+
+/**
  * Sở thích — popup HOBBY (mở từ menu hoặc bấm bức poster trong phòng), chia 3 tab: Games / Music / Films.
  * Tab nào để mảng rỗng thì tự ẩn. Mỗi tab có intro riêng (gameIntro / musicIntro / filmIntro).
  * id    : chữ không dấu / số / dấu - (tên sự kiện click trong admin: hobby-<id>, hobby-music-<id>, hobby-film-<id>)

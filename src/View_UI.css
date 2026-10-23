@@ -472,6 +472,37 @@ body.popup-open .room-control { opacity: 0.25; pointer-events: none; }
 .rc-stepper button:hover { border-color: #b2e7ff; color: #fff; }
 .rc-pixel-name { text-align: center; color: #b2e7ff; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rc-toggle { white-space: nowrap; }
+
+/* Robot hút bụi: trạng thái + nút chạy / về dock / tốc độ */
+.rc-robot[hidden] { display: none; }
+.rc-robot { gap: 8px; }
+.rc-robot-head { display: flex; justify-content: space-between; align-items: center; }
+.rc-robot-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #9fb6d6; }
+.rc-robot-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #7d97bd; }
+.rc-robot-status[data-status="cleaning"] { color: #7cf0c5; }
+.rc-robot-status[data-status="cleaning"]::before { background: #4be3a4; animation: hud-pulse 1.2s infinite; }
+.rc-robot-status[data-status="returning"] { color: #ffd166; }
+.rc-robot-status[data-status="returning"]::before { background: #ffd166; animation: hud-pulse 1.2s infinite; }
+.rc-robot-status[data-status="paused"] { color: #ff6bd6; }
+.rc-robot-status[data-status="paused"]::before { background: #ff6bd6; }
+.rc-robot-btns { display: grid; grid-template-columns: 1fr 1fr 36px; gap: 6px; }
+.rc-btn {
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid rgba(120, 190, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(77, 153, 255, 0.08);
+    color: #c9dcf5;
+    font: inherit;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.rc-btn:hover:not(:disabled) { border-color: #b2e7ff; color: #ffffff; background: rgba(77, 153, 255, 0.18); }
+.rc-btn:disabled { opacity: 0.4; cursor: default; }
+.rc-btn:focus-visible { outline: 2px solid #b2e7ff; outline-offset: 2px; }
+.rc-btn--speed { color: #66e0ff; font-variant-numeric: tabular-nums; }
 .rc-label { font-size: 11px; color: #9fb6d6; letter-spacing: 0.08em; }
 
 .rc-swatches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

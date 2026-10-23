@@ -39,30 +39,111 @@ export function createCleanerRobot(room) {
     const tangent = new THREE.Vector3();
     const state = { t: 0 };
 
-    // Hướng mũi robot theo tiếp tuyến đường đi (mũi robot = +Z cục bộ, hướng ra khỏi dock)
-    const follow = () => {
+    // Hướng mũi robot theo tiếp tuyến đường đi (mũi robot = +Z cục bộ, hướng ra khỏi dock).
+    // reverse: đang chạy ngược đường về dock → mũi quay theo chiều ngược lại
+    const follow = (reverse = false) => {
         curve.getPointAt(state.t, robot.position);
         curve.getTangentAt(state.t, tangent);
-        robot.rotation.y = Math.atan2(tangent.x, tangent.z);
+        robot.rotation.y = Math.atan2(tangent.x, tangent.z) + (reverse ? Math.PI : 0);
     };
 
-    function start() {
-        gsap.to(shadow.material, { opacity: shadow.userData.opacity, duration: 0.6 });
-        const baseRot = robot.rotation.y;
-        const facing = Math.atan2(exit.x - dock.x, exit.z - dock.z); // hướng từ dock nhìn ra
-        curve.getTangentAt(0, tangent);
-        const firstHeading = closestAngle(baseRot, Math.atan2(tangent.x, tangent.z));
-        gsap.timeline({ repeat: -1, repeatDelay: REST, delay: 4 })
+    const baseRot = robot.rotation.y;
+    const facing = Math.atan2(exit.x - dock.x, exit.z - dock.z); // hướng từ dock nhìn ra
+    curve.getTangentAt(0, tangent);
+    const firstHeading = closestAngle(baseRot, Math.atan2(tangent.x, tangent.z));
+
+    // Điều khiển từ Room control: chạy ngay / tạm dừng / về dock / tự chạy lại sau REST giây / tốc độ
+    let run = null; // timeline đang chạy (một vòng hút bụi hoặc đường về dock)
+    let rest = null; // hẹn giờ vòng tiếp theo
+    let status = "docked"; // docked | cleaning | returning
+    let auto = true;
+    let speed = 1;
+    const listeners = new Set();
+    const emit = () => listeners.forEach((fn) => fn({ status, paused: !!run?.paused(), auto, speed }));
+
+    function setRun(tl, next) {
+        run?.kill();
+        rest?.kill();
+        run = tl.timeScale(speed);
+        status = next;
+        emit();
+    }
+
+    function finish() {
+        run = null;
+        status = "docked";
+        robot.rotation.y = baseRot;
+        if (auto) rest = gsap.delayedCall(REST, clean);
+        emit();
+    }
+
+    /** Chạy một vòng (đang tạm dừng thì chạy tiếp). */
+    function clean() {
+        if (run?.paused()) return resume();
+        if (status !== "docked") return;
+        setRun(gsap.timeline({ onComplete: finish })
             .set(state, { t: 0 })
             .to(robot.rotation, { y: firstHeading, duration: 0.5, ease: "power1.inOut" }) // xoay nhẹ về hướng chạy
             .to(state, { t: 1, duration: curve.getLength() / SPEED, ease: "sine.inOut", onUpdate: follow })
+            .addLabel("home")
             // Đang nhìn về dock → quay đầu (mũi ra ngoài) rồi lùi thẳng vào
             .to(robot.rotation, { y: () => closestAngle(robot.rotation.y, facing), duration: TURN_TIME, ease: "power1.inOut" })
-            .to(robot.position, { x: dock.x, z: dock.z, duration: exit.distanceTo(dock) / SPEED + 0.6, ease: "power1.out" })
-            .set(robot.rotation, { y: baseRot });
+            .to(robot.position, { x: dock.x, z: dock.z, duration: exit.distanceTo(dock) / SPEED + 0.6, ease: "power1.out" }), "cleaning");
     }
 
-    return { start };
+    /** Về dock ngay: chạy ngược lại đoạn đường đã đi (không đâm vào đồ đạc). */
+    function goHome() {
+        if (status === "docked") return;
+        if (status === "cleaning" && run.time() >= run.labels.home) { // đã tới đoạn lùi vào dock
+            run.paused(false);
+            status = "returning";
+            return emit();
+        }
+        if (status === "returning") return resume();
+        const back = closestAngle(robot.rotation.y, robot.rotation.y + Math.PI);
+        setRun(gsap.timeline({ onComplete: finish })
+            .to(robot.rotation, { y: back, duration: TURN_TIME * 0.6, ease: "power1.inOut" })
+            .to(state, { t: 0, duration: Math.max(0.5, (state.t * curve.getLength()) / SPEED), ease: "sine.inOut", onUpdate: () => follow(true) })
+            .to(robot.rotation, { y: () => closestAngle(robot.rotation.y, baseRot), duration: TURN_TIME, ease: "power1.inOut" }), "returning");
+    }
+
+    function pause() {
+        run?.pause();
+        emit();
+    }
+    function resume() {
+        run?.resume();
+        emit();
+    }
+
+    return {
+        /** Bật vòng lặp tự động sau intro (vòng đầu sau 4 giây). */
+        start() {
+            gsap.to(shadow.material, { opacity: shadow.userData.opacity, duration: 0.6 });
+            rest?.kill();
+            if (auto) rest = gsap.delayedCall(4, clean);
+        },
+        clean,
+        goHome,
+        pause,
+        resume,
+        setAuto(value) {
+            auto = value;
+            rest?.kill();
+            if (auto && status === "docked") rest = gsap.delayedCall(REST, clean);
+            emit();
+        },
+        setSpeed(value) {
+            speed = value;
+            run?.timeScale(speed);
+            emit();
+        },
+        /** @param {(s: {status: string, paused: boolean, auto: boolean, speed: number}) => void} fn */
+        onChange(fn) {
+            listeners.add(fn);
+            emit();
+        },
+    };
 }
 
 // Góc tương đương với `target` gần `current` nhất (tránh xoay vòng 360° khi tween)
