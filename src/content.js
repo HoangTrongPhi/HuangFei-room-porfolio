@@ -248,71 +248,143 @@ export const ABOUT = {
 
 /**
  * Cây kỹ năng theo pipeline làm game — popup PIPELINE (bấm chồng sách trên hộp dưới bàn).
- * Đọc từ trái sang phải theo các giai đoạn (stages). Hai con đường Art (trên) và Code (dưới)
- * gặp nhau ở làn giữa Tech Art — chỗ bạn đang đứng.
+ * Bản đồ lớn, kéo để di chuyển, cuộn chuột để zoom. Đọc từ trái sang phải theo giai đoạn (stages).
+ * Hai con đường Art (trên) và Code (dưới) gặp nhau ở làn giữa Tech Art; cuối bản đồ là cột
+ * Lead & Production — nơi các con đường hội tụ thành vị trí lãnh đạo / quản lý.
+ *
  * nodes:
- *   id    : chữ không dấu, duy nhất          lane : "art" | "tech" | "code"
- *   col   : cột giai đoạn 1 → 6 (0 = gốc)     row  : 0–1 làn Art, 2 làn Tech Art, 3–4 làn Code
+ *   id    : chữ không dấu, duy nhất
+ *   type  : "role" (vị trí công việc — node lớn) | "skill" (node vừa) | "perk" (kỹ năng phụ — node nhỏ)
+ *   lane  : "art" | "tech" | "code" | "lead"   (màu node; dây giữa art/tech/code khác làn = nét đứt giao thoa)
+ *   col   : cột giai đoạn 0 → 8 (cho phép số lẻ .5)   row : hàng 0 → 11 (art 0–3, tech 4–6, code 7–11)
  *   level / max : điểm đã nâng (level = max → MASTERED vàng, 0 → khoá)
- *   from  : id các node đi trước (nối dây). Dây giữa hai làn khác nhau = nhánh giao thoa (nét đứt)
- *   icon  : 1–3 ký tự hiện trong node · note : mô tả · tools : tag công cụ
- * classes: 3 "nghề" ở cuối mỗi con đường; current = vị trí hiện tại; from = node dẫn tới
+ *   from  : id các node đi trước (nối dây)
+ *   icon  : 1–3 ký tự · note : mô tả · tools : tag công cụ
+ *   current : vị trí hiện tại (huy hiệu YOU ARE HERE) · goal : mục tiêu tiếp theo (huy hiệu NEXT GOAL)
  */
 export const PIPELINE = {
     // TODO: chỉnh level / note theo cảm nhận của bạn
-    intro: "Game dev pipeline, left → right. Two roads — Art and Code — cross in the middle lane: Technical Art. That's where I live.",
-    stages: ["Pre-prod", "Production", "Look-dev", "Integration", "Optimize", "Ship & Live"],
-    focus: [3, 5], // các cột bạn mạnh nhất (tô sáng trên thanh giai đoạn)
+    intro: "Game dev pipeline, left → right. Art and Code cross in the middle lane — Technical Art — then every road meets at Lead & Production. Drag to pan · scroll to zoom.",
+    stages: ["Pre-prod", "Production", "Look-dev", "Integration", "Optimize", "Ship & Live", "Lead", "Direct"],
+    focus: [3, 6], // các cột bạn mạnh nhất (gạch sáng trên thanh giai đoạn)
     lanes: {
         art: { label: "Art", color: "#ff6bd6" },
         tech: { label: "Tech Art", color: "#66e0ff" },
         code: { label: "Code", color: "#7cf0c5" },
+        lead: { label: "Lead & Production", color: "#ffa94d" },
     },
     nodes: [
-        { id: "core", lane: "tech", col: 0, row: 2, level: 1, max: 1, icon: "HP", label: "Phi", note: "Fine Arts foundation + engineering mindset." },
+        { id: "core", type: "role", lane: "tech", col: 0, row: 5.2, level: 1, max: 1, icon: "HP", label: "Phi", note: "Fine Arts foundation + engineering mindset — the starting point of every road." },
 
-        // ---- Art: nhánh 2D / nhân vật (hàng 0) ----
-        { id: "concept", lane: "art", col: 1, row: 0, level: 3, max: 5, icon: "✎", label: "Concept & 2D", from: ["core"], note: "Visual art foundation, paint-overs, mood boards.", tools: ["Photoshop", "Illustrator"] },
-        { id: "sculpt", lane: "art", col: 3, row: 0, level: 3, max: 5, icon: "◐", label: "Sculpt", from: ["concept"], note: "High-poly sculpt for props and organic shapes.", tools: ["ZBrush", "Blender"] },
-        { id: "rig", lane: "art", col: 4, row: 0, level: 2, max: 5, icon: "⟡", label: "Rig & Anim", from: ["sculpt"], note: "Basic rigging, mocap clean-up, 2D skeletal animation.", tools: ["Cascadeur", "Mixamo", "Spine 2D"] },
-        { id: "cine", lane: "art", col: 5, row: 0, level: 3, max: 5, icon: "▶", label: "Cinematic", from: ["rig"], note: "UE5 cinematic series for YouTube (Line Century).", tools: ["Sequencer", "DaVinci Resolve", "After Effects"] },
-        { id: "artdir", lane: "art", col: 6, row: 0, level: 0, max: 5, icon: "♛", label: "Art Direction", from: ["cine", "render"], note: "Next goal: owning the visual target of a project." },
+        // ================= ART =================
+        // ---- 2D / UI ----
+        { id: "concept", type: "skill", lane: "art", col: 1, row: 0, level: 3, max: 5, icon: "✎", label: "Concept & 2D", from: ["core"], note: "Visual art foundation, paint-overs, mood boards.", tools: ["Photoshop", "Illustrator"] },
+        { id: "p-color", type: "perk", lane: "art", col: 1.5, row: 0, level: 3, max: 3, icon: "◑", label: "Color & Value", from: ["concept"], note: "Color theory, value grouping, readability." },
+        { id: "r-concept", type: "role", lane: "art", col: 2, row: 0, level: 2, max: 5, icon: "✐", label: "Concept Artist", from: ["p-color"], note: "Designs the look of worlds, characters and props before production." },
+        { id: "uiux", type: "skill", lane: "art", col: 3, row: 0, level: 2, max: 5, icon: "▭", label: "UI / UX Art", from: ["r-concept"], note: "HUD, menus, icons — layouts that read at a glance.", tools: ["Figma", "Photoshop"] },
+        { id: "p-motion", type: "perk", lane: "art", col: 3.5, row: 0, level: 1, max: 3, icon: "≈", label: "Motion UI", from: ["uiux"], note: "Animated UI, transitions and juice.", tools: ["After Effects", "Spine 2D"] },
+        { id: "r-ui", type: "role", lane: "art", col: 4, row: 0, level: 1, max: 5, icon: "▤", label: "UI Artist", from: ["p-motion"], note: "Owns the game's interface art and its implementation in engine." },
+        { id: "p-style", type: "perk", lane: "art", col: 5, row: 0, level: 0, max: 3, icon: "❖", label: "Style Guide", from: ["r-ui"], note: "Writing the visual rules a whole team can follow." },
 
-        // ---- Art: nhánh 3D môi trường (hàng 1) ----
-        { id: "blockout", lane: "art", col: 1, row: 1, level: 3, max: 5, icon: "▢", label: "Blockout", from: ["core"], note: "Greybox, scale and composition before final art.", tools: ["Maya", "UE Modeling"] },
-        { id: "model", lane: "art", col: 2, row: 1, level: 5, max: 5, icon: "◆", label: "Modeling", from: ["blockout"], note: "Low / mid / high poly, hard-surface and props for AAA.", tools: ["Maya", "Blender"] },
-        { id: "texture", lane: "art", col: 3, row: 1, level: 5, max: 5, icon: "▦", label: "PBR Texture", from: ["model"], note: "Procedural and hand-crafted PBR, tiling materials.", tools: ["Substance Painter", "Substance Designer"] },
-        { id: "env", lane: "art", col: 4, row: 1, level: 5, max: 5, icon: "▲", label: "Environment", from: ["texture"], note: "Modular kits, foliage and terrain — Lies of P, Caliverse.", tools: ["SpeedTree", "Gaea", "Marmoset"] },
-        { id: "vfx", lane: "art", col: 5, row: 1, level: 2, max: 5, icon: "✺", label: "VFX", from: ["env", "material"], note: "Real-time particles, simulated flipbooks, 2D VFX.", tools: ["Niagara", "EmberGen"] },
-        { id: "render", lane: "art", col: 6, row: 1, level: 4, max: 5, icon: "◉", label: "Showcase", from: ["vfx"], note: "Portfolio renders and presentation.", tools: ["Marmoset", "UE5 MRQ"] },
+        // ---- Character / Animation ----
+        { id: "p-anatomy", type: "perk", lane: "art", col: 1.5, row: 1, level: 2, max: 3, icon: "☥", label: "Anatomy", from: ["concept"], note: "Proportion, form and silhouette." },
+        { id: "sculpt", type: "skill", lane: "art", col: 2, row: 1, level: 3, max: 5, icon: "◐", label: "Sculpt", from: ["p-anatomy"], note: "High-poly sculpt for props and organic shapes.", tools: ["ZBrush", "Blender"] },
+        { id: "p-retopo", type: "perk", lane: "art", col: 2.5, row: 1, level: 3, max: 3, icon: "⌗", label: "Retopo & UV", from: ["sculpt"], note: "Game-ready topology and clean UV layouts.", tools: ["Maya", "RizomUV"] },
+        { id: "r-char", type: "role", lane: "art", col: 3, row: 1, level: 2, max: 5, icon: "♞", label: "3D Character Artist", from: ["p-retopo", "texture"], note: "Builds game-ready characters: sculpt → retopo → bake → texture." },
+        { id: "rig", type: "skill", lane: "art", col: 4, row: 1, level: 2, max: 5, icon: "⟡", label: "Rig & Skin", from: ["r-char"], note: "Joint chains, skin weights, control rigs.", tools: ["Maya", "Control Rig"] },
+        { id: "p-mocap", type: "perk", lane: "art", col: 4.5, row: 1, level: 2, max: 3, icon: "∿", label: "Mocap Clean-up", from: ["rig"], note: "Retargeting and cleaning motion capture.", tools: ["Cascadeur", "Mixamo"] },
+        { id: "r-anim", type: "role", lane: "art", col: 5, row: 1, level: 1, max: 5, icon: "➹", label: "Animator", from: ["p-mocap"], note: "Brings characters to life — gameplay and cinematic animation." },
+        { id: "cine", type: "skill", lane: "art", col: 6, row: 1, level: 3, max: 5, icon: "▶", label: "Cinematic", from: ["r-anim"], note: "UE5 cinematic series for YouTube (Line Century).", tools: ["Sequencer", "DaVinci Resolve"] },
 
-        // ---- Tech Art: làn giữa, nơi Art và Code gặp nhau (hàng 2) ----
-        { id: "specs", lane: "tech", col: 1, row: 2, level: 4, max: 5, icon: "≡", label: "Tech Specs", from: ["core"], note: "Poly / texture budgets, texel density, naming rules.", tools: ["Docs", "Spreadsheets"] },
-        { id: "trim", lane: "tech", col: 2, row: 2, level: 4, max: 5, icon: "▤", label: "Trimsheet", from: ["specs", "model"], note: "Trimsheets and modular UV layouts for reuse.", tools: ["Maya", "Substance Designer"] },
-        { id: "material", lane: "tech", col: 3, row: 2, level: 5, max: 5, icon: "◈", label: "Material / Shader", from: ["trim", "texture"], note: "Master materials, material functions, custom shaders.", tools: ["Material Graph", "Shader Graph", "HLSL", "GLSL"] },
-        { id: "world", lane: "tech", col: 4, row: 2, level: 4, max: 5, icon: "⁂", label: "World Tech", from: ["material", "env", "dcc"], note: "PCG, procedural foliage, landscape, Lumen lighting.", tools: ["PCG", "HLOD", "Lumen"] },
-        { id: "optimize", lane: "tech", col: 5, row: 2, level: 5, max: 5, icon: "ϟ", label: "Optimization", from: ["world", "profile"], note: "Memory, draw calls, LOD / HLOD, texture streaming — milestone-ready builds.", tools: ["LOD", "Mipmap", "Draw calls"] },
-        { id: "xr", lane: "tech", col: 6, row: 2, level: 4, max: 5, icon: "◎", label: "XR & Platforms", from: ["optimize"], note: "Holding frame rate on VR/XR headsets, mobile and web.", tools: ["Meta Horizon", "Cocos", "Unity"] },
+        // ---- Environment ----
+        { id: "blockout", type: "skill", lane: "art", col: 1, row: 2, level: 3, max: 5, icon: "▢", label: "Blockout", from: ["core"], note: "Greybox, scale and composition before final art.", tools: ["Maya", "UE Modeling"] },
+        { id: "model", type: "skill", lane: "art", col: 2, row: 2, level: 5, max: 5, icon: "◆", label: "Modeling", from: ["blockout"], note: "Low / mid / high poly props for AAA.", tools: ["Maya", "Blender"] },
+        { id: "p-hard", type: "perk", lane: "art", col: 2.5, row: 2, level: 3, max: 3, icon: "⬢", label: "Hard-surface", from: ["model"], note: "Clean bevels, weighted normals, mid-poly workflow." },
+        { id: "texture", type: "skill", lane: "art", col: 3, row: 2, level: 5, max: 5, icon: "▦", label: "PBR Texture", from: ["p-hard"], note: "Procedural and hand-crafted PBR, tiling materials.", tools: ["Substance Painter", "Substance Designer"] },
+        { id: "r-env", type: "role", lane: "art", col: 4, row: 2, level: 5, max: 5, icon: "▲", label: "Environment Artist", from: ["texture"], note: "Shipped environments and props for Lies of P and Caliverse." },
+        { id: "p-foliage", type: "perk", lane: "art", col: 4.5, row: 2, level: 3, max: 3, icon: "♣", label: "Foliage & Terrain", from: ["r-env"], tools: ["SpeedTree", "Gaea"] },
+        { id: "level", type: "skill", lane: "art", col: 5, row: 2, level: 3, max: 5, icon: "⌂", label: "Level Art", from: ["p-foliage"], note: "Set dressing, composition and guiding the player's eye." },
+        { id: "showcase", type: "skill", lane: "art", col: 6, row: 2, level: 4, max: 5, icon: "◉", label: "Showcase", from: ["level"], note: "Portfolio renders and presentation.", tools: ["Marmoset", "UE5 MRQ"] },
 
-        // ---- Code: nhánh tools / pipeline (hàng 3) ----
-        { id: "python", lane: "code", col: 2, row: 3, level: 4, max: 5, icon: "Py", label: "Python", from: ["core"], note: "Pipeline scripts and batch processing.", tools: ["Python"] },
-        { id: "dcc", lane: "code", col: 3, row: 3, level: 4, max: 5, icon: "⌘", label: "DCC Tools", from: ["python"], note: "Maya / Blender add-ons that save artists time.", tools: ["Maya API", "Blender API"] },
-        { id: "assetpipe", lane: "code", col: 4, row: 3, level: 4, max: 5, icon: "⇄", label: "Asset Pipeline", from: ["dcc"], note: "Export, validation and version control for art assets.", tools: ["Git", "Perforce"] },
-        { id: "aigen", lane: "code", col: 5, row: 3, level: 3, max: 5, icon: "✦", label: "AI Gen", from: ["assetpipe"], note: "Stable Diffusion asset pipeline R&D (Kidmo).", tools: ["Stable Diffusion", "ComfyUI", "LoRA"] },
-        { id: "web", lane: "code", col: 6, row: 3, level: 3, max: 5, icon: "</>", label: "Web 3D", from: ["aigen"], note: "This room — Three.js, baked lighting, custom shaders.", tools: ["Three.js", "Vite"] },
+        // ---- VFX / Lighting ----
+        { id: "vfx", type: "skill", lane: "art", col: 4, row: 3, level: 2, max: 5, icon: "✺", label: "Real-time VFX", from: ["r-env", "p-hlsl"], note: "Particles, shader-driven effects, 2D VFX.", tools: ["Niagara", "Cocos"] },
+        { id: "p-flip", type: "perk", lane: "art", col: 4.5, row: 3, level: 1, max: 3, icon: "❋", label: "Sim Flipbooks", from: ["vfx"], tools: ["EmberGen", "Houdini"] },
+        { id: "r-vfx", type: "role", lane: "art", col: 5, row: 3, level: 1, max: 5, icon: "✹", label: "VFX Artist", from: ["p-flip"], note: "Explosions, magic, weather — effects that sell the impact." },
+        { id: "r-light", type: "role", lane: "art", col: 6, row: 3, level: 2, max: 5, icon: "☀", label: "Lighting Artist", from: ["r-vfx", "p-path"], note: "Mood, readability and performance through light." },
 
-        // ---- Code: nhánh gameplay / engine (hàng 4) ----
-        { id: "proto", lane: "code", col: 1, row: 4, level: 4, max: 5, icon: "▣", label: "Prototype", from: ["core"], note: "Minimap, pickup, inventory, HUD prototypes.", tools: ["Blueprint"] },
-        { id: "cpp", lane: "code", col: 2, row: 4, level: 4, max: 5, icon: "C++", label: "C++ / C#", from: ["proto"], note: "Unreal gameplay classes, Unity scripting.", tools: ["C++", "C#", "Rider"] },
-        { id: "gameplay", lane: "code", col: 3, row: 4, level: 3, max: 5, icon: "⚑", label: "Gameplay", from: ["cpp"], note: "Game Mode / State, Pawn, Actor, GAS.", tools: ["GAS", "Gameplay Framework"] },
-        { id: "behavior", lane: "code", col: 4, row: 4, level: 3, max: 5, icon: "⌬", label: "AI Behavior", from: ["gameplay"], note: "Behavior Trees, Blackboard, State Tree, EQS.", tools: ["State Tree", "EQS"] },
-        { id: "profile", lane: "code", col: 5, row: 4, level: 3, max: 5, icon: "◔", label: "Profiling", from: ["behavior"], note: "Finding the real bottleneck before optimizing.", tools: ["Unreal Insights", "RenderDoc"] },
-        { id: "engine", lane: "code", col: 6, row: 4, level: 1, max: 5, icon: "⚙", label: "Engine & Render", from: ["profile", "xr"], note: "Next goal: custom render passes and engine plugins.", tools: ["UE Plugins", "RDG"] },
-    ],
-    classes: [
-        { id: "art", lane: "art", row: 0.5, title: "Environment Artist", from: ["artdir", "render"] },
-        { id: "tech", lane: "tech", row: 2, title: "Technical Artist", from: ["xr"], current: true, next: "Next: Lead Technical Artist" },
-        { id: "code", lane: "code", row: 3.5, title: "Tools Programmer", from: ["web", "engine"] },
+        // ================= TECH ART =================
+        { id: "p-hlsl", type: "perk", lane: "tech", col: 3.5, row: 4.3, level: 3, max: 3, icon: "{}", label: "HLSL / GLSL", from: ["material"], note: "Hand-written shader code when nodes are not enough." },
+        { id: "lighting", type: "skill", lane: "tech", col: 4, row: 4.3, level: 4, max: 5, icon: "☼", label: "Lighting Tech", from: ["p-hlsl"], note: "Lumen, baked lighting, light budgets.", tools: ["Lumen", "Lightmass"] },
+        { id: "p-path", type: "perk", lane: "tech", col: 4.5, row: 4.3, level: 2, max: 3, icon: "⟿", label: "Path Tracing", from: ["lighting"], tools: ["Path Tracer"] },
+
+        { id: "specs", type: "skill", lane: "tech", col: 1, row: 5.2, level: 4, max: 5, icon: "≡", label: "Tech Specs", from: ["core"], note: "Poly / texture budgets, texel density, naming rules." },
+        { id: "p-budget", type: "perk", lane: "tech", col: 1.5, row: 5.2, level: 3, max: 3, icon: "⚖", label: "Budgets", from: ["specs"], note: "Memory, triangle and draw-call budgets per platform." },
+        { id: "trim", type: "skill", lane: "tech", col: 2, row: 5.2, level: 4, max: 5, icon: "▥", label: "Trimsheet & Modular", from: ["p-budget", "model"], note: "Trimsheets and modular kits for reuse.", tools: ["Maya", "Substance Designer"] },
+        { id: "material", type: "skill", lane: "tech", col: 3, row: 5.2, level: 5, max: 5, icon: "◈", label: "Material / Shader", from: ["trim", "texture"], note: "Master materials, material functions, custom shaders.", tools: ["Material Graph", "Shader Graph"] },
+        { id: "world", type: "skill", lane: "tech", col: 4, row: 5.2, level: 4, max: 5, icon: "⁂", label: "World Tech", from: ["material"], note: "World partition, landscape, streaming.", tools: ["World Partition", "Landscape"] },
+        { id: "p-lod", type: "perk", lane: "tech", col: 4.5, row: 5.2, level: 3, max: 3, icon: "⧉", label: "LOD / HLOD", from: ["world"] },
+        { id: "optimize", type: "skill", lane: "tech", col: 5, row: 5.2, level: 5, max: 5, icon: "ϟ", label: "Optimization", from: ["p-lod", "profile"], note: "Memory, draw calls, texture streaming — milestone-ready builds.", tools: ["Unreal Insights", "stat GPU"] },
+        { id: "r-ta", type: "role", lane: "tech", col: 6, row: 5.2, level: 4, max: 5, icon: "◎", label: "Technical Artist", from: ["optimize", "xr"], current: true, note: "Bridge between art and engineering: shaders, tools, pipeline and performance." },
+
+        { id: "pcg", type: "skill", lane: "tech", col: 3, row: 6.1, level: 4, max: 5, icon: "⌬", label: "PCG / Procedural", from: ["material", "dcc"], note: "Procedural foliage and placement, PCG graphs.", tools: ["PCG", "Substance Designer"] },
+        { id: "p-houdini", type: "perk", lane: "tech", col: 3.5, row: 6.1, level: 1, max: 3, icon: "⌇", label: "Houdini", from: ["pcg"], tools: ["Houdini"] },
+        { id: "techanim", type: "skill", lane: "tech", col: 4, row: 6.1, level: 2, max: 5, icon: "⟲", label: "Tech Anim", from: ["p-houdini"], note: "Anim Blueprints, physics, procedural motion.", tools: ["Anim Blueprint", "Control Rig"] },
+        { id: "xr", type: "skill", lane: "tech", col: 5, row: 6.1, level: 4, max: 5, icon: "◍", label: "XR & Platforms", from: ["optimize", "techanim"], note: "Holding frame rate on VR/XR headsets, mobile and web.", tools: ["Meta Horizon", "Cocos", "Unity"] },
+        { id: "p-mentor", type: "perk", lane: "tech", col: 6.5, row: 4.6, level: 2, max: 3, icon: "☍", label: "Mentoring", from: ["r-ta"], note: "Reviews, guides and training for artists." },
+
+        // ================= CODE =================
+        // ---- Tools ----
+        { id: "python", type: "skill", lane: "code", col: 2, row: 7, level: 4, max: 5, icon: "Py", label: "Python", from: ["core"], note: "Pipeline scripts and batch processing." },
+        { id: "p-pyside", type: "perk", lane: "code", col: 2.5, row: 7, level: 2, max: 3, icon: "▣", label: "PySide UI", from: ["python"], note: "Tool windows artists actually enjoy using." },
+        { id: "dcc", type: "skill", lane: "code", col: 3, row: 7, level: 4, max: 5, icon: "⌘", label: "DCC Tools", from: ["p-pyside"], note: "Maya / Blender add-ons that save artists time.", tools: ["Maya API", "Blender API"] },
+        { id: "assetpipe", type: "skill", lane: "code", col: 4, row: 7, level: 4, max: 5, icon: "⇄", label: "Asset Pipeline", from: ["dcc"], note: "Export, validation and import automation.", tools: ["Python", "UE Python"] },
+        { id: "r-tools", type: "role", lane: "code", col: 5, row: 7, level: 2, max: 5, icon: "⚒", label: "Tools Programmer", from: ["assetpipe"], note: "Builds the editors and pipelines the whole studio works in." },
+        { id: "aigen", type: "skill", lane: "code", col: 6, row: 7, level: 3, max: 5, icon: "✦", label: "AI Gen Pipeline", from: ["r-tools"], note: "Stable Diffusion asset pipeline R&D (Kidmo).", tools: ["ComfyUI", "LoRA", "ControlNet"] },
+
+        // ---- Gameplay ----
+        { id: "proto", type: "skill", lane: "code", col: 1, row: 8, level: 4, max: 5, icon: "▧", label: "Blueprint Prototype", from: ["core"], note: "Minimap, pickup, inventory, HUD prototypes.", tools: ["Blueprint"] },
+        { id: "cpp", type: "skill", lane: "code", col: 2, row: 8, level: 4, max: 5, icon: "C++", label: "C++ / C#", from: ["proto"], note: "Unreal gameplay classes, Unity scripting.", tools: ["Rider", "Visual Studio"] },
+        { id: "gameplay", type: "skill", lane: "code", col: 3, row: 8, level: 3, max: 5, icon: "⚑", label: "Gameplay Framework", from: ["cpp"], note: "Game Mode / State, Pawn, Character, Actor." },
+        { id: "p-gas", type: "perk", lane: "code", col: 3.5, row: 8, level: 2, max: 3, icon: "✚", label: "GAS", from: ["gameplay"], note: "Gameplay Ability System." },
+        { id: "r-gameplay", type: "role", lane: "code", col: 4, row: 8, level: 2, max: 5, icon: "⚔", label: "Gameplay Programmer", from: ["p-gas"], note: "Turns design into mechanics that feel good to play." },
+        { id: "behavior", type: "skill", lane: "code", col: 5, row: 8, level: 3, max: 5, icon: "⌥", label: "AI Behavior", from: ["r-gameplay"], note: "Behavior Trees, Blackboard, State Tree, EQS.", tools: ["State Tree", "EQS"] },
+        { id: "p-net", type: "perk", lane: "code", col: 5.5, row: 8, level: 0, max: 3, icon: "⇋", label: "Netcode", from: ["behavior"], note: "Replication and multiplayer — next to learn." },
+
+        // ---- Engine / Graphics ----
+        { id: "p-math", type: "perk", lane: "code", col: 2, row: 9, level: 3, max: 3, icon: "∑", label: "3D Math", from: ["cpp"], note: "Vectors, matrices, quaternions." },
+        { id: "render", type: "skill", lane: "code", col: 3, row: 9, level: 2, max: 5, icon: "◭", label: "Render Pipeline", from: ["p-math"], note: "Deferred / forward, GPU passes, frame anatomy." },
+        { id: "profile", type: "skill", lane: "code", col: 4, row: 9, level: 3, max: 5, icon: "◔", label: "Profiling", from: ["render"], note: "Finding the real bottleneck before optimizing.", tools: ["Unreal Insights", "RenderDoc", "PIX"] },
+        { id: "p-rdg", type: "perk", lane: "code", col: 4.5, row: 9, level: 0, max: 3, icon: "⧈", label: "RDG / Passes", from: ["profile"], note: "Custom render passes in Unreal's Render Dependency Graph." },
+        { id: "r-engine", type: "role", lane: "code", col: 5, row: 9, level: 0, max: 5, icon: "⚙", label: "Graphics Programmer", from: ["p-rdg"], note: "Engine-level rendering features and GPU performance." },
+
+        // ---- Web ----
+        { id: "js", type: "skill", lane: "code", col: 2, row: 10, level: 3, max: 5, icon: "JS", label: "JS / TS", from: ["proto"], note: "Modern JavaScript, modules, tooling.", tools: ["Vite", "WebStorm"] },
+        { id: "web3d", type: "skill", lane: "code", col: 3, row: 10, level: 3, max: 5, icon: "</>", label: "Three.js / WebGL", from: ["js"], note: "This room — Three.js, baked lighting, custom shaders.", tools: ["Three.js", "GSAP"] },
+        { id: "r-fe", type: "role", lane: "code", col: 4, row: 10, level: 2, max: 5, icon: "▦", label: "Front End Dev", from: ["web3d"], note: "Interactive web experiences, UI and 3D on the web." },
+        { id: "api", type: "skill", lane: "code", col: 5, row: 10, level: 2, max: 5, icon: "⇅", label: "APIs & Database", from: ["r-fe"], note: "Serverless APIs, SQL, auth.", tools: ["Vercel", "Supabase", "Node"] },
+        { id: "r-be", type: "role", lane: "code", col: 6, row: 10, level: 1, max: 5, icon: "▤", label: "Back End Dev", from: ["api"], note: "Services, leaderboards, live-game data." },
+
+        // ---- Build / QA / Ops ----
+        { id: "vcs", type: "skill", lane: "code", col: 1, row: 11, level: 4, max: 5, icon: "⑂", label: "Version Control", from: ["core"], tools: ["Git", "Perforce"] },
+        { id: "p-ci", type: "perk", lane: "code", col: 2, row: 11, level: 1, max: 3, icon: "↻", label: "CI / Builds", from: ["vcs"], note: "Automated builds and cooking." },
+        { id: "testing", type: "skill", lane: "code", col: 3, row: 11, level: 2, max: 5, icon: "✓", label: "Testing & Debug", from: ["p-ci"], note: "Repro steps, test plans, debugging tools." },
+        { id: "r-qa", type: "role", lane: "code", col: 4, row: 11, level: 1, max: 5, icon: "⚲", label: "QA Engineer", from: ["testing"], note: "Guards quality — test automation and release checks." },
+        { id: "p-cloud", type: "perk", lane: "code", col: 5, row: 11, level: 0, max: 3, icon: "☁", label: "Cloud & Docker", from: ["r-qa"], note: "Containers, cloud build agents." },
+        { id: "r-devops", type: "role", lane: "code", col: 6, row: 11, level: 0, max: 5, icon: "∞", label: "DevOps", from: ["p-cloud"], note: "Build farms, deployment and live-ops infrastructure." },
+
+        // ================= LEAD & PRODUCTION =================
+        { id: "r-ad", type: "role", lane: "lead", col: 7, row: 1.5, level: 0, max: 5, icon: "♛", label: "Art Director", from: ["cine", "showcase", "p-style", "r-light"], note: "Owns the visual target of the whole project." },
+        { id: "r-leadta", type: "role", lane: "lead", col: 7, row: 4.6, level: 0, max: 5, icon: "◈", label: "Lead Technical Artist", from: ["p-mentor"], goal: true, note: "Next goal: leading the tech art team and owning the art pipeline." },
+        { id: "r-td", type: "role", lane: "lead", col: 7, row: 7, level: 0, max: 5, icon: "⌖", label: "Technical Director", from: ["r-leadta", "aigen", "p-net"], note: "Sets the technical direction: engine, platforms, pipeline." },
+        { id: "r-arch", type: "role", lane: "lead", col: 7, row: 9.6, level: 0, max: 5, icon: "⌸", label: "Technical Architect", from: ["r-engine", "r-be", "r-devops"], note: "Designs systems that scale — engine, services, infrastructure." },
+
+        { id: "p-schedule", type: "perk", lane: "lead", col: 7.5, row: 2.6, level: 1, max: 3, icon: "◷", label: "Scheduling", from: ["r-ad"], note: "Milestones, estimates, dependencies." },
+        { id: "p-scrum", type: "perk", lane: "lead", col: 7.5, row: 5.8, level: 2, max: 3, icon: "⟳", label: "Agile / Scrum", from: ["r-leadta", "r-td"], note: "Sprints, stand-ups, retros — used daily in studios.", tools: ["Jira", "Confluence"] },
+        { id: "p-roadmap", type: "perk", lane: "lead", col: 7.5, row: 8.6, level: 0, max: 3, icon: "⇢", label: "Roadmap & Backlog", from: ["r-td", "r-arch"], note: "Prioritizing what ships next." },
+
+        { id: "r-producer", type: "role", lane: "lead", col: 8, row: 2.6, level: 0, max: 5, icon: "★", label: "Producer", from: ["p-schedule", "r-pm"], note: "Keeps the game on time, on budget and the team healthy." },
+        { id: "r-pm", type: "role", lane: "lead", col: 8, row: 5.8, level: 0, max: 5, icon: "▦", label: "Project Manager", from: ["p-scrum"], note: "Plans and tracks delivery across disciplines." },
+        { id: "r-po", type: "role", lane: "lead", col: 8, row: 8.6, level: 0, max: 5, icon: "◆", label: "Product Owner", from: ["p-roadmap", "r-pm"], note: "Owns the product vision and the backlog." },
     ],
 };
 
