@@ -12,6 +12,8 @@ import { createRenderer } from "./core/renderer.js";
 import { isMobile, maxPixelRatio } from "./core/device.js";
 import { createCamera } from "./core/camera.js";
 import { loadSceneModel } from "./core/models.js";
+import { applyRoomEnvironment } from "./core/light.js";
+import { initLoader } from "./core/loader.js";
 import { loadRGBleds } from "./core/RGB_led.js";
 import { loadCasePC } from "./core/Case_PC.js";
 import { loadMonitorScreens } from "./core/screen_video.js";
@@ -55,6 +57,10 @@ const CONFIG = {
         target: [0, 0.1, 0],
         zoom: 0.1, // camera thực tế = target + (pos - target) * zoom
     },
+    // Env map cho phản chiếu PBR; exposure đã cao nên để nhỏ (≥ 0.2 làm tường bạc màu, mất chất neon)
+    environment: {
+        intensity: 0.1,
+    },
     bloom: {
         enabled: true,
         strength: 0.8,
@@ -88,7 +94,15 @@ const CONFIG = {
             Github: LINKS.github,
         },
     },
-    music: { src: "/music/CuteSimple Piano.ogg", title: "Cute Simple Piano", volume: 0.6 },
+    // Opus/WebM nhẹ nhất; Safari cũ không phát được thì dùng bản AAC/M4A
+    music: {
+        sources: [
+            { src: "/music/bgm.webm", type: 'audio/webm; codecs="opus"' },
+            { src: "/music/bgm.m4a", type: 'audio/mp4; codecs="mp4a.40.2"' },
+        ],
+        title: "Cute Simple Piano",
+        volume: 0.6,
+    },
     // Vật thể bấm được: bay camera tới (view = hướng nhìn từ vật thể tới camera) rồi mở popup
     spots: {
         monitor: { label: "My work", popup: "work", view: [1, 0.35, 0.15] },
@@ -119,6 +133,8 @@ const { camera, controls } = createCamera(canvas, CONFIG.camera);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.renderer.background);
+applyRoomEnvironment(renderer, scene, CONFIG.environment);
+initLoader(renderer);
 
 // ===== Load models =====
 // Các hàm update mỗi frame, được thêm vào khi model tương ứng load xong
@@ -171,7 +187,9 @@ initLoadingScreen(ready, {
     onEnter() {
         track("enter");
         // Phát nhạc sau khi người dùng bấm Enter (trình duyệt chặn autoplay có tiếng)
-        bgMusic = new Audio(CONFIG.music.src);
+        bgMusic = new Audio();
+        const { sources } = CONFIG.music;
+        bgMusic.src = (sources.find((s) => bgMusic.canPlayType(s.type)) ?? sources.at(-1)).src;
         bgMusic.loop = true;
         bgMusic.volume = CONFIG.music.volume;
         try {
@@ -288,7 +306,7 @@ ready.then(async () => {
     });
 });
 
-if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
+if (import.meta.env.DEV) window.__app = { scene, camera, controls, focus, gsap, renderer }; // debug: __app.gsap.globalTimeline.timeScale(0.2) để xem chậm
 
 // ===== Render loop =====
 // Bloom phải render cả cảnh thêm 1 lần mỗi frame → tắt trên điện thoại cho mượt

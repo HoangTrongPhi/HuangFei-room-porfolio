@@ -12,7 +12,7 @@ export function createRenderer(canvas, { toneMapping, toneMappingExposure }) {
     renderer.toneMapping = toneMapping;
     renderer.toneMappingExposure = toneMappingExposure;
 
-    // Ánh sáng đã bake vào lightmap nên tắt shadow realtime
+    // Phòng isometric tĩnh: tắt shadow realtime cho nhẹ (ánh sáng = env map + ambient/directional)
     renderer.shadowMap.enabled = false;
 
     return renderer;

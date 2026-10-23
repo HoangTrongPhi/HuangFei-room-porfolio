@@ -1,12 +1,21 @@
 // core/loader.js
 // GLTFLoader dùng chung cho mọi model. Draco decoder lấy từ /public/draco/
-// (hiện chưa GLB nào nén Draco, nhưng để sẵn nếu sau này export có nén).
+// (room_portfolio, Case_PC, Social_Link, Monitor đều nén Draco).
+// Texture nén KTX2 (Basis: ETC1S cho màu/ORM, UASTC cho normal) → giải mã bằng transcoder ở /public/basis/,
+// lên GPU ở dạng nén nên tốn ít VRAM hơn WebP nhiều lần.
 // Đồng thời theo dõi tiến trình tải của mọi file GLB cho màn hình loading.
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 
 const dracoLoader = new DRACOLoader().setDecoderPath("/draco/");
-const gltfLoader = new GLTFLoader().setDRACOLoader(dracoLoader);
+const ktx2Loader = new KTX2Loader().setTranscoderPath("/basis/");
+const gltfLoader = new GLTFLoader().setDRACOLoader(dracoLoader).setKTX2Loader(ktx2Loader);
+
+/** Phải gọi trước loadGLB: KTX2Loader cần renderer để chọn định dạng nén GPU hỗ trợ (BC7/ASTC/ETC...). */
+export function initLoader(renderer) {
+    ktx2Loader.detectSupport(renderer);
+}
 
 // url → { loaded, total, done } (byte)
 const files = new Map();
